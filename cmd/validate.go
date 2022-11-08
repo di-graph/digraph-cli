@@ -39,18 +39,20 @@ func invokeDigraphValidateAPI(parsedTFPlan utils.ParsedTerraformPlan, digraphAPI
 		InvocationMode: mode,
 	}
 
-	if issueNumber > 0 {
-		requestBody.IssueNumber = issueNumber
-		requestBody.TriggeringActionEventName = "pull_request"
-	} else if len(commitSHA) > 0 {
-		requestBody.CommitSHA = commitSHA
-		requestBody.TriggeringActionEventName = "push"
-	} else {
-		return "", errors.New("invalid input- must specify pull request or commit sha")
-	}
+	if mode == "ci/cd" {
+		if issueNumber > 0 {
+			requestBody.IssueNumber = issueNumber
+			requestBody.TriggeringActionEventName = "pull_request"
+		} else if len(commitSHA) > 0 {
+			requestBody.CommitSHA = commitSHA
+			requestBody.TriggeringActionEventName = "push"
+		} else {
+			return "", errors.New("invalid input- must specify pull request or commit sha")
+		}
 
-	if len(commitSHA) > 0 && len(ref) == 0 {
-		return "", errors.New("must provide branch ref associated with commit")
+		if len(commitSHA) > 0 && len(ref) == 0 {
+			return "", errors.New("must provide branch ref associated with commit")
+		}
 	}
 
 	requestBytes, err := json.Marshal(requestBody)
