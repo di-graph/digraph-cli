@@ -26,15 +26,17 @@ type TerraformConfigValidatorInput struct {
 	IssueNumber               int                       `json:"issue_number"`
 	CommitSHA                 string                    `json:"commit_sha"`
 	Ref                       string                    `json:"ref"`
+	InvocationMode            string                    `json:"invocation_mode"`
 }
 
 const validationURL = "https://app.getdigraph.com/api/validate/terraform"
 
-func invokeDigraphValidateAPI(parsedTFPlan utils.ParsedTerraformPlan, digraphAPIKey, repository, ref, commitSHA string, issueNumber int) (string, error) {
+func invokeDigraphValidateAPI(parsedTFPlan utils.ParsedTerraformPlan, digraphAPIKey, mode, repository, ref, commitSHA string, issueNumber int) (string, error) {
 	requestBody := TerraformConfigValidatorInput{
-		TerraformPlan: parsedTFPlan,
-		Repository:    repository,
-		Ref:           ref,
+		TerraformPlan:  parsedTFPlan,
+		Repository:     repository,
+		Ref:            ref,
+		InvocationMode: mode,
 	}
 
 	if issueNumber > 0 {
@@ -97,6 +99,8 @@ func validate() *cobra.Command {
 			issueNumber, _ := cmd.Flags().GetInt("issueNumber")
 			commitSHA, _ := cmd.Flags().GetString("commit-sha")
 
+			mode, _ := cmd.Flags().GetString("mode")
+
 			if len(digraphAPIKey) == 0 {
 				err := godotenv.Load(".env")
 
@@ -135,7 +139,7 @@ func validate() *cobra.Command {
 				return fmt.Errorf("error parsing JSON %s", err.Error())
 			}
 
-			output, err := invokeDigraphValidateAPI(parsedPlan, digraphAPIKey, repository, ref, commitSHA, issueNumber)
+			output, err := invokeDigraphValidateAPI(parsedPlan, digraphAPIKey, mode, repository, ref, commitSHA, issueNumber)
 			if err != nil {
 				return fmt.Errorf("error calling API %s", err.Error())
 			}
@@ -144,7 +148,9 @@ func validate() *cobra.Command {
 				// cleanup by removing temp file that was written for terraform output case
 				os.Remove(jsonFilePath)
 			}
-			fmt.Printf("%s\n", output)
+			if mode == "cli" {
+				fmt.Printf("%s\n", output)
+			}
 			return nil
 		},
 	}
@@ -162,6 +168,8 @@ func validate() *cobra.Command {
 	cmd.Flags().String("ref", "", "Branch ref")
 	cmd.Flags().Int("issueNumber", 0, "Pull Request Number")
 	cmd.Flags().String("commit-sha", "", "Commit SHA")
+
+	cmd.Flags().String("mode", "ci/cd", "Running mode- ci/cd or cli")
 
 	return cmd
 }
