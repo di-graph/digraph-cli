@@ -113,19 +113,19 @@ func validate() *cobra.Command {
 				digraphAPIKey = os.Getenv("digraphAPIKey")
 			}
 
-			if len(terraformAPIKey) == 0 {
-				err := godotenv.Load(".env")
-
-				if err != nil {
-					return fmt.Errorf("must specify terraformAPIKey as argument or set it within a .env file")
-				}
-
-				terraformAPIKey = os.Getenv("terraformAPIKey")
-			}
-
 			var jsonFilePath string
 			var err error
 			if len(tfPlanOutput) > 0 {
+				if len(terraformAPIKey) == 0 {
+					err := godotenv.Load(".env")
+
+					if err != nil {
+						return fmt.Errorf("must specify terraformAPIKey as argument or set it within a .env file")
+					}
+
+					terraformAPIKey = os.Getenv("terraformAPIKey")
+				}
+
 				jsonFilePath, err = utils.FetchRemoteTerraformPlan(tfPlanOutput, terraformAPIKey)
 				if err != nil {
 					return fmt.Errorf("error getting plan json %s", err.Error())
