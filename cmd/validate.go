@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"time"
@@ -53,6 +54,10 @@ func invokeDigraphValidateAPI(parsedTFPlan utils.ParsedTerraformPlan, digraphAPI
 		if len(commitSHA) > 0 && len(ref) == 0 {
 			return "", errors.New("must provide branch ref associated with commit")
 		}
+
+		if len(repository) == 0 {
+			return "", errors.New("must provide repository flag")
+		}
 	}
 
 	requestBytes, err := json.Marshal(requestBody)
@@ -92,6 +97,7 @@ func validate() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			tfPlanOutput, _ := cmd.Flags().GetString("raw-output-plan")
 			jsonPathPlan, _ := cmd.Flags().GetString("json-path-plan")
+			tfRawPath, _ := cmd.Flags().GetString("output-path-plan")
 
 			terraformAPIKey, _ := cmd.Flags().GetString("terraform-api-key")
 			digraphAPIKey, _ := cmd.Flags().GetString("api-key")
@@ -107,10 +113,10 @@ func validate() *cobra.Command {
 				err := godotenv.Load(".env")
 
 				if err != nil {
-					return fmt.Errorf("must specify digraphAPIKey as argument or set it within a .env file")
+					return fmt.Errorf("must specify api-key as argument or set it within a .env file")
 				}
 
-				digraphAPIKey = os.Getenv("digraphAPIKey")
+				digraphAPIKey = os.Getenv("api-key")
 			}
 
 			var jsonFilePath string
@@ -123,7 +129,7 @@ func validate() *cobra.Command {
 						return fmt.Errorf("must specify terraform-api-key as argument or set it within a .env file")
 					}
 
-					terraformAPIKey = os.Getenv("terraformAPIKey")
+					terraformAPIKey = os.Getenv("terraform-api-key")
 				}
 
 				jsonFilePath, err = utils.FetchRemoteTerraformPlan(tfPlanOutput, terraformAPIKey)
@@ -132,8 +138,28 @@ func validate() *cobra.Command {
 				}
 			} else if len(jsonPathPlan) > 0 {
 				jsonFilePath = jsonPathPlan
+			} else if len(tfRawPath) > 0 {
+				if len(terraformAPIKey) == 0 {
+					err := godotenv.Load(".env")
+
+					if err != nil {
+						return fmt.Errorf("must specify terraform-api-key as argument or set it within a .env file")
+					}
+
+					terraformAPIKey = os.Getenv("terraform-api-key")
+				}
+				rawOutputFile, err := os.Open(tfRawPath)
+				if err != nil {
+					return fmt.Errorf("error %s", err.Error())
+				}
+
+				rawByteValue, _ := ioutil.ReadAll(rawOutputFile)
+				jsonFilePath, err = utils.FetchRemoteTerraformPlan(string(rawByteValue), terraformAPIKey)
+				if err != nil {
+					return fmt.Errorf("error getting plan json %s", err.Error())
+				}
 			} else {
-				return fmt.Errorf("must specify either stdOutPlan or jsonPathPlan")
+				return fmt.Errorf("must specify raw-output-plan or json-path-plan or output-path-plan")
 			}
 
 			parsedPlan, err := utils.ParseTerraformPlanJSON(jsonFilePath)
@@ -158,6 +184,7 @@ func validate() *cobra.Command {
 	}
 
 	cmd.Flags().String("raw-output-plan", "", "Terminal output from terraform plan command")
+	cmd.Flags().String("output-path-plan", "", "Filepath for terminal output from terraform plan command")
 	cmd.Flags().String("json-path-plan", "", "Filepath to terraform plan JSON file")
 
 	cmd.Flags().String("terraform-api-key", "", "Terraform API Key")
@@ -165,7 +192,6 @@ func validate() *cobra.Command {
 	cmd.Flags().String("api-key", "", "Digraph API Key")
 
 	cmd.Flags().String("repository", "", "Github repository")
-	_ = cmd.MarkFlagRequired("repository")
 
 	cmd.Flags().String("ref", "", "Branch ref")
 	cmd.Flags().Int("issue-number", 0, "Pull Request Number")
