@@ -90,15 +90,15 @@ func validate() *cobra.Command {
 		Long:      ``,
 		ValidArgs: []string{"--", "-"},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			tfPlanOutput, _ := cmd.Flags().GetString("stdOutPlan")
-			jsonPathPlan, _ := cmd.Flags().GetString("jsonPathPlan")
+			tfPlanOutput, _ := cmd.Flags().GetString("raw-output-plan")
+			jsonPathPlan, _ := cmd.Flags().GetString("json-path-plan")
 
-			terraformAPIKey, _ := cmd.Flags().GetString("terraformAPIKey")
-			digraphAPIKey, _ := cmd.Flags().GetString("digraphAPIKey")
+			terraformAPIKey, _ := cmd.Flags().GetString("terraform-api-key")
+			digraphAPIKey, _ := cmd.Flags().GetString("api-key")
 			repository, _ := cmd.Flags().GetString("repository")
 			ref, _ := cmd.Flags().GetString("ref")
 
-			issueNumber, _ := cmd.Flags().GetInt("issueNumber")
+			issueNumber, _ := cmd.Flags().GetInt("issue-number")
 			commitSHA, _ := cmd.Flags().GetString("commit-sha")
 
 			mode, _ := cmd.Flags().GetString("mode")
@@ -120,7 +120,7 @@ func validate() *cobra.Command {
 					err := godotenv.Load(".env")
 
 					if err != nil {
-						return fmt.Errorf("must specify terraformAPIKey as argument or set it within a .env file")
+						return fmt.Errorf("must specify terraform-api-key as argument or set it within a .env file")
 					}
 
 					terraformAPIKey = os.Getenv("terraformAPIKey")
@@ -157,18 +157,18 @@ func validate() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String("stdOutPlan", "", "Terminal output from terraform plan command")
-	cmd.Flags().String("jsonPathPlan", "", "Filepath to terraform plan JSON file")
+	cmd.Flags().String("raw-output-plan", "", "Terminal output from terraform plan command")
+	cmd.Flags().String("json-path-plan", "", "Filepath to terraform plan JSON file")
 
-	cmd.Flags().String("terraformAPIKey", "", "Terraform API Key")
+	cmd.Flags().String("terraform-api-key", "", "Terraform API Key")
 
-	cmd.Flags().String("digraphAPIKey", "", "Digraph API Key")
+	cmd.Flags().String("api-key", "", "Digraph API Key")
 
 	cmd.Flags().String("repository", "", "Github repository")
 	_ = cmd.MarkFlagRequired("repository")
 
 	cmd.Flags().String("ref", "", "Branch ref")
-	cmd.Flags().Int("issueNumber", 0, "Pull Request Number")
+	cmd.Flags().Int("issue-number", 0, "Pull Request Number")
 	cmd.Flags().String("commit-sha", "", "Commit SHA")
 
 	cmd.Flags().String("mode", "ci/cd", "Running mode- ci/cd or cli")
