@@ -75,6 +75,7 @@ func findReleaseAssets() ([]string, error) {
 		"*.zip",
 		"*.sha256",
 		"*.exe",
+		"digraph",
 	}
 
 	var toUpload []string
