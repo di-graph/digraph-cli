@@ -2,7 +2,7 @@ BINARY := digraph
 PKG := github.com/di-graph/digraph
 
 build:
-	go install && CGO_ENABLED=0 go build -o $(BINARY) $(PKG)
+	CGO_ENABLED=0 go build -o $(BINARY) $(PKG)
 
 windows:
 	env GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -o $(BINARY).exe $(PKG)
