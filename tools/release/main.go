@@ -74,6 +74,7 @@ func findReleaseAssets() ([]string, error) {
 		"*.tar.gz",
 		"*.zip",
 		"*.sha256",
+		"*.exe",
 	}
 
 	var toUpload []string
