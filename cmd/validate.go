@@ -98,6 +98,7 @@ func validate() *cobra.Command {
 			tfPlanOutput, _ := cmd.Flags().GetString("raw-output-plan")
 			jsonPathPlan, _ := cmd.Flags().GetString("json-path-plan")
 			tfRawPath, _ := cmd.Flags().GetString("output-path-plan")
+			tfJsonOutput, _ := cmd.Flags().GetString("json-output-plan")
 
 			terraformAPIKey, _ := cmd.Flags().GetString("terraform-api-key")
 			digraphAPIKey, _ := cmd.Flags().GetString("api-key")
@@ -158,8 +159,20 @@ func validate() *cobra.Command {
 				if err != nil {
 					return fmt.Errorf("error getting plan json %s", err.Error())
 				}
+			} else if len(tfJsonOutput) > 0 {
+				jsonFilePath := "/tmp/tf_plan.json"
+				tempFile, err := os.Create(jsonFilePath)
+				if err != nil {
+					return fmt.Errorf("error getting plan json %s", err.Error())
+				}
+
+				defer tempFile.Close()
+				_, err = tempFile.Write([]byte(tfJsonOutput))
+				if err != nil {
+					return fmt.Errorf("error getting plan json %s", err.Error())
+				}
 			} else {
-				return fmt.Errorf("must specify raw-output-plan or json-path-plan or output-path-plan")
+				return fmt.Errorf("must specify raw-output-plan or json-path-plan or output-path-plan or json-output-plan")
 			}
 
 			parsedPlan, err := utils.ParseTerraformPlanJSON(jsonFilePath)
@@ -186,6 +199,7 @@ func validate() *cobra.Command {
 	cmd.Flags().String("raw-output-plan", "", "Terminal output from terraform plan command")
 	cmd.Flags().String("output-path-plan", "", "Filepath for terminal output from terraform plan command")
 	cmd.Flags().String("json-path-plan", "", "Filepath to terraform plan JSON file")
+	cmd.Flags().String("json-output-plan", "", "JSON output from terraform plan command")
 
 	cmd.Flags().String("terraform-api-key", "", "Terraform API Key")
 
