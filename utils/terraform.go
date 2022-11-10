@@ -155,6 +155,27 @@ func FetchRemoteTerraformPlan(tfPlanOutput string, terraformAPIKey string) (stri
 	return jsonFilePath, nil
 }
 
+func ParseTerraformJSONFromRaw(jsonPlan string) (ParsedTerraformPlan, error) {
+	var parsedJSONPlan ParsedTerraformPlan
+
+	json.Unmarshal([]byte(jsonPlan), &parsedJSONPlan)
+
+	var actualChanges []ResourceChange
+	for _, resourceChange := range parsedJSONPlan.ResourceChanges {
+		for _, action := range resourceChange.Change.Actions {
+			if action != "no-op" {
+				actualChanges = append(actualChanges, resourceChange)
+			}
+		}
+	}
+
+	var parsedPlanChangesOnly = ParsedTerraformPlan{
+		ResourceChanges: actualChanges,
+	}
+
+	return parsedPlanChangesOnly, nil
+}
+
 func ParseTerraformPlanJSON(jsonFilePath string) (ParsedTerraformPlan, error) {
 	jsonFile, err := os.Open(jsonFilePath)
 	if err != nil {
