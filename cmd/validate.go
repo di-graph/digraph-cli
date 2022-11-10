@@ -159,7 +159,7 @@ func validate() *cobra.Command {
 				if err != nil {
 					return fmt.Errorf("error getting plan json %s", err.Error())
 				}
-			} else if len(tfJsonOutput) == 0 {
+			} else if len(tfJsonOutput) > 0 {
 				jsonFilePath := "/tmp/tf_plan.json"
 				tempFile, err := os.Create(jsonFilePath)
 				if err != nil {
