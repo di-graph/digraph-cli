@@ -28,16 +28,18 @@ type TerraformConfigValidatorInput struct {
 	CommitSHA                 string                    `json:"commit_sha"`
 	Ref                       string                    `json:"ref"`
 	InvocationMode            string                    `json:"invocation_mode"`
+	TerraformWorkspace        string                    `json:"terraform_workspace"`
 }
 
 const validationURL = "https://app.getdigraph.com/api/validate/terraform"
 
-func invokeDigraphValidateAPI(parsedTFPlan utils.ParsedTerraformPlan, digraphAPIKey, mode, repository, ref, commitSHA string, issueNumber int) (string, error) {
+func invokeDigraphValidateAPI(parsedTFPlan utils.ParsedTerraformPlan, digraphAPIKey, mode, repository, ref, commitSHA, terraformWorkspace string, issueNumber int) (string, error) {
 	requestBody := TerraformConfigValidatorInput{
-		TerraformPlan:  parsedTFPlan,
-		Repository:     repository,
-		Ref:            ref,
-		InvocationMode: mode,
+		TerraformPlan:      parsedTFPlan,
+		Repository:         repository,
+		Ref:                ref,
+		InvocationMode:     mode,
+		TerraformWorkspace: terraformWorkspace,
 	}
 
 	if mode == "ci/cd" {
@@ -109,6 +111,7 @@ func validate() *cobra.Command {
 			commitSHA, _ := cmd.Flags().GetString("commit-sha")
 
 			mode, _ := cmd.Flags().GetString("mode")
+			terraformWorkspace, _ := cmd.Flags().GetString("terraform-workspace")
 
 			if len(digraphAPIKey) == 0 {
 				err := godotenv.Load(".env")
@@ -180,7 +183,7 @@ func validate() *cobra.Command {
 				return fmt.Errorf("error parsing JSON %s", err.Error())
 			}
 
-			output, err := invokeDigraphValidateAPI(parsedPlan, digraphAPIKey, mode, repository, ref, commitSHA, issueNumber)
+			output, err := invokeDigraphValidateAPI(parsedPlan, digraphAPIKey, mode, repository, ref, commitSHA, terraformWorkspace, issueNumber)
 			if err != nil {
 				return fmt.Errorf("error calling API %s", err.Error())
 			}
@@ -212,6 +215,8 @@ func validate() *cobra.Command {
 	cmd.Flags().String("commit-sha", "", "Commit SHA")
 
 	cmd.Flags().String("mode", "ci/cd", "Running mode- ci/cd or cli")
+
+	cmd.Flags().String("terraform-workspace", "", "Terraform workspace for associated plan")
 
 	return cmd
 }
