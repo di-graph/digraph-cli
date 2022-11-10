@@ -13,7 +13,6 @@ WORKDIR /app
 
 COPY . .
 RUN go mod download
-RUN NO_DIRTY=true make release
 RUN NO_DIRTY=true make build
 RUN chmod +x /app/digraph
 ENTRYPOINT ["/app/digraph"] 
