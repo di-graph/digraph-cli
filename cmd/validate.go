@@ -28,6 +28,7 @@ func init() {
 	validate.Flags().String("terraform-api-key", "", "Terraform API Key")
 	validate.Flags().String("terraform-workspace", "", "Terraform workspace for associated plan")
 
+	// persistent flags are flags that are shared between all sub commands
 	validate.PersistentFlags().String("api-key", "", "Digraph API Key")
 
 	validate.PersistentFlags().String("repository", "", "Github repository")
