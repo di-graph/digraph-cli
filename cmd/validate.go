@@ -87,136 +87,141 @@ func invokeDigraphValidateAPI(parsedTFPlan utils.ParsedTerraformPlan, digraphAPI
 	defer res.Body.Close()
 	body, _ := io.ReadAll(res.Body)
 
+	if res.StatusCode != http.StatusOK {
+		return "", errors.New(fmt.Sprintf("client: error with http request: status code %d with body %s\n", res.StatusCode, body))
+	}
+
 	return string(body), nil
 }
 
-func validate() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:       "validate",
-		Short:     "Validate infra config changes",
-		Long:      ``,
-		ValidArgs: []string{"--", "-"},
-		RunE: func(cmd *cobra.Command, args []string) error {
-			tfPlanOutput, _ := cmd.Flags().GetString("raw-output-plan")
-			jsonPathPlan, _ := cmd.Flags().GetString("json-path-plan")
-			tfRawPath, _ := cmd.Flags().GetString("output-path-plan")
-			tfJsonOutput, _ := cmd.Flags().GetString("json-output-plan")
+var validate = &cobra.Command{
+	Use:       "validate",
+	Short:     "Validate infra config changes",
+	Long:      ``,
+	ValidArgs: []string{"--", "-"},
+	RunE: func(cmd *cobra.Command, args []string) error {
+		tfPlanOutput, _ := cmd.Flags().GetString("raw-output-plan")
+		jsonPathPlan, _ := cmd.Flags().GetString("json-path-plan")
+		tfRawPath, _ := cmd.Flags().GetString("output-path-plan")
+		tfJsonOutput, _ := cmd.Flags().GetString("json-output-plan")
 
-			terraformAPIKey, _ := cmd.Flags().GetString("terraform-api-key")
-			digraphAPIKey, _ := cmd.Flags().GetString("api-key")
-			repository, _ := cmd.Flags().GetString("repository")
-			ref, _ := cmd.Flags().GetString("ref")
+		terraformAPIKey, _ := cmd.Flags().GetString("terraform-api-key")
+		digraphAPIKey, _ := cmd.Flags().GetString("api-key")
+		repository, _ := cmd.Flags().GetString("repository")
+		ref, _ := cmd.Flags().GetString("ref")
 
-			issueNumber, _ := cmd.Flags().GetInt("issue-number")
-			commitSHA, _ := cmd.Flags().GetString("commit-sha")
+		issueNumber, _ := cmd.Flags().GetInt("issue-number")
+		commitSHA, _ := cmd.Flags().GetString("commit-sha")
 
-			mode, _ := cmd.Flags().GetString("mode")
-			terraformWorkspace, _ := cmd.Flags().GetString("terraform-workspace")
+		mode, _ := cmd.Flags().GetString("mode")
+		terraformWorkspace, _ := cmd.Flags().GetString("terraform-workspace")
 
-			if len(digraphAPIKey) == 0 {
+		if len(digraphAPIKey) == 0 {
+			err := godotenv.Load(".env")
+
+			if err != nil {
+				return fmt.Errorf("must specify api-key as argument or set it within a .env file")
+			}
+
+			digraphAPIKey = os.Getenv("api-key")
+		}
+
+		var jsonFilePath string
+		var err error
+		if len(tfPlanOutput) > 0 {
+			if len(terraformAPIKey) == 0 {
 				err := godotenv.Load(".env")
 
 				if err != nil {
-					return fmt.Errorf("must specify api-key as argument or set it within a .env file")
+					return fmt.Errorf("must specify terraform-api-key as argument or set it within a .env file")
 				}
 
-				digraphAPIKey = os.Getenv("api-key")
+				terraformAPIKey = os.Getenv("terraform-api-key")
 			}
 
-			var jsonFilePath string
-			var err error
-			if len(tfPlanOutput) > 0 {
-				if len(terraformAPIKey) == 0 {
-					err := godotenv.Load(".env")
-
-					if err != nil {
-						return fmt.Errorf("must specify terraform-api-key as argument or set it within a .env file")
-					}
-
-					terraformAPIKey = os.Getenv("terraform-api-key")
-				}
-
-				jsonFilePath, err = utils.FetchRemoteTerraformPlan(tfPlanOutput, terraformAPIKey)
-				if err != nil {
-					return fmt.Errorf("error getting plan json %s", err.Error())
-				}
-			} else if len(jsonPathPlan) > 0 {
-				jsonFilePath = jsonPathPlan
-			} else if len(tfRawPath) > 0 {
-				if len(terraformAPIKey) == 0 {
-					err := godotenv.Load(".env")
-
-					if err != nil {
-						return fmt.Errorf("must specify terraform-api-key as argument or set it within a .env file")
-					}
-
-					terraformAPIKey = os.Getenv("terraform-api-key")
-				}
-				rawOutputFile, err := os.Open(tfRawPath)
-				if err != nil {
-					return fmt.Errorf("error %s", err.Error())
-				}
-
-				rawByteValue, _ := ioutil.ReadAll(rawOutputFile)
-				jsonFilePath, err = utils.FetchRemoteTerraformPlan(string(rawByteValue), terraformAPIKey)
-				if err != nil {
-					return fmt.Errorf("error getting plan json %s", err.Error())
-				}
-			} else if len(tfJsonOutput) > 0 {
-				jsonFilePath := "/tmp/tf_plan.json"
-				tempFile, err := os.Create(jsonFilePath)
-				if err != nil {
-					return fmt.Errorf("error getting plan json %s", err.Error())
-				}
-
-				defer tempFile.Close()
-				_, err = tempFile.Write([]byte(tfJsonOutput))
-				if err != nil {
-					return fmt.Errorf("error getting plan json %s", err.Error())
-				}
-			} else {
-				return fmt.Errorf("must specify raw-output-plan or json-path-plan or output-path-plan or json-output-plan")
-			}
-
-			parsedPlan, err := utils.ParseTerraformPlanJSON(jsonFilePath)
+			jsonFilePath, err = utils.FetchRemoteTerraformPlan(tfPlanOutput, terraformAPIKey)
 			if err != nil {
-				return fmt.Errorf("error parsing JSON %s", err.Error())
+				return fmt.Errorf("error getting plan json %s", err.Error())
 			}
+		} else if len(jsonPathPlan) > 0 {
+			jsonFilePath = jsonPathPlan
+		} else if len(tfRawPath) > 0 {
+			if len(terraformAPIKey) == 0 {
+				err := godotenv.Load(".env")
 
-			output, err := invokeDigraphValidateAPI(parsedPlan, digraphAPIKey, mode, repository, ref, commitSHA, terraformWorkspace, issueNumber)
+				if err != nil {
+					return fmt.Errorf("must specify terraform-api-key as argument or set it within a .env file")
+				}
+
+				terraformAPIKey = os.Getenv("terraform-api-key")
+			}
+			rawOutputFile, err := os.Open(tfRawPath)
 			if err != nil {
-				return fmt.Errorf("error calling API %s", err.Error())
+				return fmt.Errorf("error %s", err.Error())
 			}
 
-			if len(tfPlanOutput) > 0 {
-				// cleanup by removing temp file that was written for terraform output case
-				os.Remove(jsonFilePath)
+			rawByteValue, _ := ioutil.ReadAll(rawOutputFile)
+			jsonFilePath, err = utils.FetchRemoteTerraformPlan(string(rawByteValue), terraformAPIKey)
+			if err != nil {
+				return fmt.Errorf("error getting plan json %s", err.Error())
 			}
-			if mode == "cli" {
-				fmt.Printf("%s\n", output)
+		} else if len(tfJsonOutput) > 0 {
+			jsonFilePath := "/tmp/tf_plan.json"
+			tempFile, err := os.Create(jsonFilePath)
+			if err != nil {
+				return fmt.Errorf("error getting plan json %s", err.Error())
 			}
-			return nil
-		},
-	}
 
-	cmd.Flags().String("raw-output-plan", "", "Terminal output from terraform plan command")
-	cmd.Flags().String("output-path-plan", "", "Filepath for terminal output from terraform plan command")
-	cmd.Flags().String("json-path-plan", "", "Filepath to terraform plan JSON file")
-	cmd.Flags().String("json-output-plan", "", "JSON output from terraform plan command")
+			defer tempFile.Close()
+			_, err = tempFile.Write([]byte(tfJsonOutput))
+			if err != nil {
+				return fmt.Errorf("error getting plan json %s", err.Error())
+			}
+		} else {
+			return fmt.Errorf("must specify raw-output-plan or json-path-plan or output-path-plan or json-output-plan")
+		}
 
-	cmd.Flags().String("terraform-api-key", "", "Terraform API Key")
+		parsedPlan, err := utils.ParseTerraformPlanJSON(jsonFilePath)
+		if err != nil {
+			return fmt.Errorf("error parsing JSON %s", err.Error())
+		}
 
-	cmd.Flags().String("api-key", "", "Digraph API Key")
+		output, err := invokeDigraphValidateAPI(parsedPlan, digraphAPIKey, mode, repository, ref, commitSHA, terraformWorkspace, issueNumber)
+		if err != nil {
+			return fmt.Errorf("error calling API %s", err.Error())
+		}
 
-	cmd.Flags().String("repository", "", "Github repository")
+		if len(tfPlanOutput) > 0 {
+			// cleanup by removing temp file that was written for terraform output case
+			os.Remove(jsonFilePath)
+		}
+		if mode == "cli" {
+			fmt.Printf("%s\n", output)
+		}
+		return nil
+	},
+}
 
-	cmd.Flags().String("ref", "", "Branch ref")
-	cmd.Flags().Int("issue-number", 0, "Pull Request Number")
-	cmd.Flags().String("commit-sha", "", "Commit SHA")
+func init() {
+	validate.Flags().String("raw-output-plan", "", "Terminal output from terraform plan command")
+	validate.Flags().String("output-path-plan", "", "Filepath for terminal output from terraform plan command")
+	validate.Flags().String("json-path-plan", "", "Filepath to terraform plan JSON file")
+	validate.Flags().String("json-output-plan", "", "JSON output from terraform plan command")
 
-	cmd.Flags().String("mode", "ci/cd", "Running mode- ci/cd or cli")
+	validate.Flags().String("terraform-api-key", "", "Terraform API Key")
 
-	cmd.Flags().String("terraform-workspace", "", "Terraform workspace for associated plan")
+	validate.Flags().String("api-key", "", "Digraph API Key")
 
-	return cmd
+	validate.Flags().String("repository", "", "Github repository")
+
+	validate.Flags().String("ref", "", "Branch ref")
+	validate.Flags().Int("issue-number", 0, "Pull Request Number")
+	validate.Flags().String("commit-sha", "", "Commit SHA")
+
+	validate.Flags().String("mode", "ci/cd", "Running mode- ci/cd or cli")
+
+	validate.Flags().String("terraform-workspace", "", "Terraform workspace for associated plan")
+
+	rootCmd.AddCommand(validate)
+	validate.AddCommand(validateKubernetes())
 }
