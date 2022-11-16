@@ -61,7 +61,7 @@ func invokeDigraphKubernetesValidateAPI(kubernetesManifest, digraphAPIKey, mode,
 		return "", err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, validationURL, bytes.NewReader(requestBytes))
+	req, err := http.NewRequest(http.MethodPost, k8sValidationURL, bytes.NewReader(requestBytes))
 	if err != nil {
 		return "", err
 	}
