@@ -24,10 +24,15 @@ var FRIENDLY_NAMES map[string]string = map[string]string{
 	"sensitive_resource_types": "Sensitive Resource Type",
 }
 
+const NO_VIOLATION_COMMENT = `
+No Terraform Policy Violations
+
+`
+
 func constructResultsByTerraformResource(output ValidationResponse) {
 	numViolations := len(output.ViolationsByResource)
 	if numViolations == 0 {
-		color.Green(output.Comment)
+		color.Green(NO_VIOLATION_COMMENT)
 	} else {
 		var result string
 		result = result + "\n"
@@ -58,7 +63,7 @@ func constructResultsByTerraformResource(output ValidationResponse) {
 func constructResultsByTerraformCategory(output ValidationResponse) {
 	numViolations := len(output.ViolationsByResource)
 	if numViolations == 0 {
-		color.Green(output.Comment)
+		color.Green(NO_VIOLATION_COMMENT)
 	} else {
 		// iterate over categories with violations and print details
 		var result string
