@@ -33,7 +33,7 @@ type TerraformConfigValidatorInput struct {
 
 const validationURL = "https://app.getdigraph.com/api/validate/terraform"
 
-func invokeDigraphValidateAPI(parsedTFPlan utils.ParsedTerraformPlan, digraphAPIKey, mode, repository, ref, commitSHA, terraformWorkspace string, issueNumber int) (string, error) {
+func invokeDigraphValidateAPI(parsedTFPlan utils.ParsedTerraformPlan, digraphAPIKey, mode, repository, ref, commitSHA, terraformWorkspace string, issueNumber int) (utils.ValidationResponse, error) {
 	requestBody := TerraformConfigValidatorInput{
 		TerraformPlan:      parsedTFPlan,
 		Repository:         repository,
@@ -41,6 +41,8 @@ func invokeDigraphValidateAPI(parsedTFPlan utils.ParsedTerraformPlan, digraphAPI
 		InvocationMode:     mode,
 		TerraformWorkspace: terraformWorkspace,
 	}
+
+	response := utils.ValidationResponse{}
 
 	if mode == "ci/cd" {
 		if issueNumber > 0 {
@@ -50,26 +52,26 @@ func invokeDigraphValidateAPI(parsedTFPlan utils.ParsedTerraformPlan, digraphAPI
 			requestBody.CommitSHA = commitSHA
 			requestBody.TriggeringActionEventName = "push"
 		} else {
-			return "", errors.New("invalid input- must specify pull request or commit sha")
+			return response, errors.New("invalid input- must specify pull request or commit sha")
 		}
 
 		if len(commitSHA) > 0 && len(ref) == 0 {
-			return "", errors.New("must provide branch ref associated with commit")
+			return response, errors.New("must provide branch ref associated with commit")
 		}
 
 		if len(repository) == 0 {
-			return "", errors.New("must provide repository flag")
+			return response, errors.New("must provide repository flag")
 		}
 	}
 
 	requestBytes, err := json.Marshal(requestBody)
 	if err != nil {
-		return "", err
+		return response, err
 	}
 
 	req, err := http.NewRequest(http.MethodPost, validationURL, bytes.NewReader(requestBytes))
 	if err != nil {
-		return "", err
+		return response, err
 	}
 
 	req.Header.Set("X-Digraph-Secret-Key", digraphAPIKey)
@@ -81,17 +83,23 @@ func invokeDigraphValidateAPI(parsedTFPlan utils.ParsedTerraformPlan, digraphAPI
 	res, err := client.Do(req)
 	if err != nil {
 		fmt.Printf("client: error making http request: %s\n", err)
-		return "", err
+		return response, err
 	}
 
 	defer res.Body.Close()
 	body, _ := io.ReadAll(res.Body)
 
 	if res.StatusCode != http.StatusOK {
-		return "", errors.New(fmt.Sprintf("client: error with http request: status code %d with body %s\n", res.StatusCode, body))
+		return response, fmt.Errorf("client: error with http request: status code %d with body %s", res.StatusCode, body)
 	}
 
-	return string(body), nil
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		fmt.Printf("cannot unmarshal api response: %s\n", err)
+		return utils.ValidationResponse{}, err
+	}
+
+	return response, nil
 }
 
 func terraformRunCommand(cmd *cobra.Command) error {
@@ -192,7 +200,7 @@ func terraformRunCommand(cmd *cobra.Command) error {
 		os.Remove(jsonFilePath)
 	}
 	if mode == "cli" {
-		fmt.Printf("%s\n", output)
+		utils.PrettyPrintCLIOutput(output, utils.TERRAFORM_INFRA)
 	}
 	return nil
 }
