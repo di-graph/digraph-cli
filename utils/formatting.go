@@ -102,9 +102,15 @@ func constructResultsByTerraformCategory(output ValidationResponse) {
 	}
 }
 
-func PrettyPrintCLIOutput(output ValidationResponse, infraType string) {
+func PrettyPrintCLIOutput(output ValidationResponse, infraType, groupBy string) {
 	if infraType == TERRAFORM_INFRA {
-		// constructResultsByTerraformCategory(output)
-		constructResultsByTerraformResource(output)
+		switch groupBy {
+		case "resource":
+			constructResultsByTerraformResource(output)
+		case "policy":
+			constructResultsByTerraformCategory(output)
+		default:
+			constructResultsByTerraformResource(output)
+		}
 	}
 }

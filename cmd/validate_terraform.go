@@ -119,6 +119,7 @@ func terraformRunCommand(cmd *cobra.Command) error {
 
 	mode, _ := cmd.Flags().GetString("mode")
 	terraformWorkspace, _ := cmd.Flags().GetString("terraform-workspace")
+	groupBy, _ := cmd.Flags().GetString("group-by")
 
 	if len(digraphAPIKey) == 0 {
 		err := godotenv.Load(".env")
@@ -200,7 +201,7 @@ func terraformRunCommand(cmd *cobra.Command) error {
 		os.Remove(jsonFilePath)
 	}
 	if mode == "cli" {
-		utils.PrettyPrintCLIOutput(output, utils.TERRAFORM_INFRA)
+		utils.PrettyPrintCLIOutput(output, utils.TERRAFORM_INFRA, groupBy)
 	}
 	return nil
 }
