@@ -104,10 +104,10 @@ func invokeDigraphValidateAPI(parsedTFPlan utils.ParsedTerraformPlan, digraphAPI
 
 func terraformRunCommand(cmd *cobra.Command) error {
 
-	tfPlanOutput, _ := cmd.Flags().GetString("raw-output-plan")
-	jsonPathPlan, _ := cmd.Flags().GetString("json-path-plan")
-	tfRawPath, _ := cmd.Flags().GetString("output-path-plan")
-	tfJsonOutput, _ := cmd.Flags().GetString("json-output-plan")
+	tfPlanOutput, _ := cmd.Flags().GetString("raw-output-plan")  // raw output of tf plan as string
+	jsonPathPlan, _ := cmd.Flags().GetString("json-path-plan")   // filepath of the saved plan in json format
+	tfRawPath, _ := cmd.Flags().GetString("output-path-plan")    // filepath of the saved raw output of the tf plan
+	tfJsonOutput, _ := cmd.Flags().GetString("json-output-plan") // output of tf plan in json format as string
 
 	terraformAPIKey, _ := cmd.Flags().GetString("terraform-api-key")
 	digraphAPIKey, _ := cmd.Flags().GetString("api-key")
