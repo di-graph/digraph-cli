@@ -25,7 +25,7 @@ var FRIENDLY_NAMES map[string]string = map[string]string{
 
 func constructResultsByResource(resultString string, output ValidationResponse) string {
 	// iterate over resources with violations and print details
-	var result string
+	result := resultString
 	for resource, details := range output.ViolationsByResource {
 		blueBold := color.New(color.FgBlue, color.Bold)
 		resourceDetailString := blueBold.Sprintf("* %s", resource)
@@ -36,10 +36,10 @@ func constructResultsByResource(resultString string, output ValidationResponse) 
 			joinedDetails := strings.Join(detailList, ", ")
 			resourceDetailString = fmt.Sprintf(`
 %s
-- %s: %s
+    - %s: %s
 			`, resourceDetailString, underline.Sprintf(friendlyName), joinedDetails)
 		}
-		result = resultString + resourceDetailString
+		result = result + resourceDetailString
 	}
 	return result
 }
