@@ -42,3 +42,13 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           push: true
+  homebrew:
+    name: Bump Homebrew formula
+    needs: push_to_registry
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dawidd6/action-homebrew-bump-formula@v3
+        with:
+          token: ${{secrets.HOMEBREW_GITHUB_TOKEN}}
+          tap: di-graph/homebrew-digraph
+          formula: digraph
