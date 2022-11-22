@@ -41,8 +41,8 @@ func constructResultsByTerraformResource(output ValidationResponse) {
 
 		// iterate over resources with violations and print details
 		for resource, details := range output.ViolationsByResource {
-			blueBold := color.New(color.FgBlue, color.Bold)
-			resourceDetailString := blueBold.Sprintf("* %s", resource)
+			cyanBold := color.New(color.FgCyan, color.Bold)
+			resourceDetailString := cyanBold.Sprintf("* %s", resource)
 			resourceDetailString = resourceDetailString + "\n"
 			for category, detailList := range details {
 				friendlyName := FRIENDLY_NAMES[category]
@@ -70,9 +70,9 @@ func constructResultsByTerraformCategory(output ValidationResponse) {
 		var numViolations int
 		for category, details := range output.ViolationsByCategory {
 			if len(details) > 0 {
-				blueBold := color.New(color.FgBlue, color.Bold)
+				cyanBold := color.New(color.FgCyan, color.Bold)
 				friendlyName := FRIENDLY_NAMES[category]
-				categoryDetailString := blueBold.Sprintf("* %s", friendlyName)
+				categoryDetailString := cyanBold.Sprintf("* %s", friendlyName)
 				categoryDetailString = categoryDetailString + "\n"
 				for resource, detail := range details {
 					underline := color.New(color.Underline)
