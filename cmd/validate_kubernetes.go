@@ -1,6 +1,5 @@
 /*
 Copyright © 2022 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
@@ -102,11 +101,14 @@ func validateKubernetes() *cobra.Command {
 			issueNumber, _ := cmd.Flags().GetInt("issue-number")
 			commitSHA, _ := cmd.Flags().GetString("commit-sha")
 
-			mode, _ := cmd.Flags().GetString("mode")
-
 			kubernetesManifest, _ := cmd.Flags().GetString("kubernetes-manifest")
 
 			fmt.Println("Called kubernetes command")
+
+			mode := "cli"
+			if len(commitSHA) > 0 || issueNumber > 0 {
+				mode = "ci/cd"
+			}
 
 			// if len(digraphAPIKey) == 0 {
 			// 	err := godotenv.Load(".env")
@@ -130,7 +132,7 @@ func validateKubernetes() *cobra.Command {
 		},
 	}
 
-	// cmd.Flags().String("kubernetes-manifest", "", "Kubernetes manifest YAML")
+	cmd.Flags().String("kubernetes-manifest", "", "Kubernetes manifest YAML")
 
 	// cmd.Flags().String("api-key", "", "Digraph API Key")
 
@@ -139,8 +141,6 @@ func validateKubernetes() *cobra.Command {
 	// cmd.Flags().String("ref", "", "Branch ref")
 	// cmd.Flags().Int("issue-number", 0, "Pull Request Number")
 	// cmd.Flags().String("commit-sha", "", "Commit SHA")
-
-	// cmd.Flags().String("mode", "ci/cd", "Running mode- ci/cd or cli")
 
 	return cmd
 }

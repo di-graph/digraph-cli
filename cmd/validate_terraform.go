@@ -1,6 +1,5 @@
 /*
 Copyright © 2022 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
@@ -117,7 +116,6 @@ func terraformRunCommand(cmd *cobra.Command) error {
 	issueNumber, _ := cmd.Flags().GetInt("issue-number")
 	commitSHA, _ := cmd.Flags().GetString("commit-sha")
 
-	mode, _ := cmd.Flags().GetString("mode")
 	terraformWorkspace, _ := cmd.Flags().GetString("terraform-workspace")
 	groupBy, _ := cmd.Flags().GetString("group-by")
 
@@ -189,6 +187,12 @@ func terraformRunCommand(cmd *cobra.Command) error {
 	parsedPlan, err := utils.ParseTerraformPlanJSON(jsonFilePath)
 	if err != nil {
 		return fmt.Errorf("error parsing JSON %s", err.Error())
+	}
+
+	mode := "cli"
+
+	if len(commitSHA) > 0 || issueNumber > 0 {
+		mode = "ci/cd"
 	}
 
 	output, err := invokeDigraphValidateAPI(parsedPlan, digraphAPIKey, mode, repository, ref, commitSHA, terraformWorkspace, issueNumber)
