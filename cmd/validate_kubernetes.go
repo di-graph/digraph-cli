@@ -81,7 +81,7 @@ func invokeDigraphKubernetesValidateAPI(kubernetesManifest, digraphAPIKey, mode,
 	body, _ := io.ReadAll(res.Body)
 
 	if res.StatusCode != http.StatusOK {
-		return "", errors.New(fmt.Sprintf("client: error with http request: status code %d with body %s\n", res.StatusCode, body))
+		return "", fmt.Errorf("client: error with http request: status code %d with body %s", res.StatusCode, body)
 	}
 
 	return string(body), nil

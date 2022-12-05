@@ -9,12 +9,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/di-graph/digraph/utils"
+	hclParser "github.com/di-graph/digraph/utils/hcl"
+	"github.com/hashicorp/hcl/v2"
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 )
@@ -28,6 +29,42 @@ type TerraformConfigValidatorInput struct {
 	Ref                       string                    `json:"ref"`
 	InvocationMode            string                    `json:"invocation_mode"`
 	TerraformWorkspace        string                    `json:"terraform_workspace"`
+}
+
+type Variable struct {
+	Name        string         `hcl:",label"`
+	Description string         `hcl:"description,optional"`
+	Sensitive   bool           `hcl:"sensitive,optional"`
+	Type        *hcl.Attribute `hcl:"type,optional"`
+	Default     *hcl.Attribute `hcl:"default,optional"`
+	Options     hcl.Body       `hcl:",remain"`
+}
+
+type Output struct {
+	Name        string   `hcl:",label"`
+	Description string   `hcl:"description,optional"`
+	Sensitive   bool     `hcl:"sensitive,optional"`
+	Value       string   `hcl:"value,optional"`
+	Options     hcl.Body `hcl:",remain"`
+}
+
+type Resource struct {
+	Type    string   `hcl:"type,label"`
+	Name    string   `hcl:"name,label"`
+	Options hcl.Body `hcl:",remain"`
+}
+
+type Data struct {
+	Type    string   `hcl:"type,label"`
+	Name    string   `hcl:"name,label"`
+	Options hcl.Body `hcl:",remain"`
+}
+
+type Config struct {
+	Outputs   []*Output   `hcl:"output,block"`
+	Variables []*Variable `hcl:"variable,block"`
+	Resources []*Resource `hcl:"resource,block"`
+	Data      []*Data     `hcl:"data,block"`
 }
 
 const validationURL = "https://app.getdigraph.com/api/validate/terraform"
@@ -107,6 +144,7 @@ func terraformRunCommand(cmd *cobra.Command) error {
 	jsonPathPlan, _ := cmd.Flags().GetString("json-path-plan")   // filepath of the saved plan in json format
 	tfRawPath, _ := cmd.Flags().GetString("output-path-plan")    // filepath of the saved raw output of the tf plan
 	tfJsonOutput, _ := cmd.Flags().GetString("json-output-plan") // output of tf plan in json format as string
+	tfHCLOutput, _ := cmd.Flags().GetString("hcl-output-plan")   // raw HCL terraform
 
 	terraformAPIKey, _ := cmd.Flags().GetString("terraform-api-key")
 	digraphAPIKey, _ := cmd.Flags().GetString("api-key")
@@ -131,6 +169,26 @@ func terraformRunCommand(cmd *cobra.Command) error {
 
 	var jsonFilePath string
 	var err error
+
+	if len(tfHCLOutput) > 0 {
+		fileContent, err := os.ReadFile("/Users/bahar/src/digraph-repo/terraform/aws.tf")
+		if err != nil {
+			return fmt.Errorf(err.Error())
+		}
+
+		parsedFile, err := hclParser.ParseHclToJson("aws.tf", string(fileContent), hclParser.ModuleVariables{})
+		if err != nil {
+			return fmt.Errorf(err.Error())
+		}
+
+		jsonBytes, err := json.MarshalIndent(parsedFile, "", "")
+		if err != nil {
+			return fmt.Errorf(err.Error())
+		}
+		fmt.Printf("%v", string(jsonBytes))
+		return nil
+	}
+
 	if len(tfPlanOutput) > 0 {
 		if len(terraformAPIKey) == 0 {
 			err := godotenv.Load(".env")
@@ -163,7 +221,7 @@ func terraformRunCommand(cmd *cobra.Command) error {
 			return fmt.Errorf("error %s", err.Error())
 		}
 
-		rawByteValue, _ := ioutil.ReadAll(rawOutputFile)
+		rawByteValue, _ := io.ReadAll(rawOutputFile)
 		jsonFilePath, err = utils.FetchRemoteTerraformPlan(string(rawByteValue), terraformAPIKey)
 		if err != nil {
 			return fmt.Errorf("error getting plan json %s", err.Error())
@@ -225,6 +283,7 @@ func validateTerraform() *cobra.Command {
 	tfCmd.Flags().String("output-path-plan", "", "Filepath for terminal output from terraform plan command")
 	tfCmd.Flags().String("json-path-plan", "", "Filepath to terraform plan JSON file")
 	tfCmd.Flags().String("json-output-plan", "", "JSON output from terraform plan command")
+	tfCmd.Flags().String("hcl-output-plan", "", "HCL output from terraform")
 
 	tfCmd.Flags().String("terraform-api-key", "", "Terraform API Key")
 	tfCmd.Flags().String("terraform-workspace", "", "Terraform workspace for associated plan")
