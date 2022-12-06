@@ -36,6 +36,7 @@ func init() {
 	validate.PersistentFlags().String("commit-sha", "", "Commit SHA")
 
 	validate.PersistentFlags().String("group-by", "resource", "Group results based on resource or policy")
+	validate.PersistentFlags().String("output-format", "terminal", "Format in which to output results")
 
 	rootCmd.AddCommand(validate)
 	validate.AddCommand(validateKubernetes())

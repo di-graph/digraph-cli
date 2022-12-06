@@ -28,20 +28,24 @@ type TerraformConfigValidatorInput struct {
 	Ref                       string                    `json:"ref"`
 	InvocationMode            string                    `json:"invocation_mode"`
 	TerraformWorkspace        string                    `json:"terraform_workspace"`
+	GroupBy                   string                    `json:"group_by"`
+	OutputFormat              string                    `json:"output_format"`
 }
 
 const validationURL = "https://app.getdigraph.com/api/validate/terraform"
 
-func invokeDigraphValidateAPI(parsedTFPlan utils.ParsedTerraformPlan, digraphAPIKey, mode, repository, ref, commitSHA, terraformWorkspace string, issueNumber int) (utils.ValidationResponse, error) {
+func invokeDigraphValidateAPI(parsedTFPlan utils.ParsedTerraformPlan, digraphAPIKey, mode, repository, ref, commitSHA, terraformWorkspace, groupBy, outputFormat string, issueNumber int) (interface{}, error) {
 	requestBody := TerraformConfigValidatorInput{
 		TerraformPlan:      parsedTFPlan,
 		Repository:         repository,
 		Ref:                ref,
 		InvocationMode:     mode,
 		TerraformWorkspace: terraformWorkspace,
+		GroupBy:            groupBy,
+		OutputFormat:       outputFormat,
 	}
 
-	response := utils.ValidationResponse{}
+	var response interface{}
 
 	if mode == "ci/cd" {
 		if issueNumber > 0 {
@@ -118,6 +122,7 @@ func terraformRunCommand(cmd *cobra.Command) error {
 
 	terraformWorkspace, _ := cmd.Flags().GetString("terraform-workspace")
 	groupBy, _ := cmd.Flags().GetString("group-by")
+	outputFormat, _ := cmd.Flags().GetString("output-format")
 
 	if len(digraphAPIKey) == 0 {
 		err := godotenv.Load(".env")
@@ -195,7 +200,7 @@ func terraformRunCommand(cmd *cobra.Command) error {
 		mode = "ci/cd"
 	}
 
-	output, err := invokeDigraphValidateAPI(parsedPlan, digraphAPIKey, mode, repository, ref, commitSHA, terraformWorkspace, issueNumber)
+	output, err := invokeDigraphValidateAPI(parsedPlan, digraphAPIKey, mode, repository, ref, commitSHA, terraformWorkspace, groupBy, outputFormat, issueNumber)
 	if err != nil {
 		return fmt.Errorf("error calling API %s", err.Error())
 	}
@@ -205,7 +210,7 @@ func terraformRunCommand(cmd *cobra.Command) error {
 		os.Remove(jsonFilePath)
 	}
 	if mode == "cli" {
-		utils.PrettyPrintCLIOutput(output, utils.TERRAFORM_INFRA, groupBy)
+		fmt.Print(output)
 	}
 	return nil
 }
