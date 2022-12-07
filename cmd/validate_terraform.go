@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"time"
@@ -162,7 +161,7 @@ func terraformRunCommand(cmd *cobra.Command) error {
 			return fmt.Errorf("error %s", err.Error())
 		}
 
-		rawByteValue, _ := ioutil.ReadAll(rawOutputFile)
+		rawByteValue, _ := io.ReadAll(rawOutputFile)
 		jsonFilePath, err = utils.FetchRemoteTerraformPlan(string(rawByteValue), terraformAPIKey)
 		if err != nil {
 			return fmt.Errorf("error getting plan json %s", err.Error())
