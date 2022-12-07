@@ -34,7 +34,7 @@ type TerraformConfigValidatorInput struct {
 
 const validationURL = "https://app.getdigraph.com/api/validate/terraform"
 
-func invokeDigraphValidateAPI(parsedTFPlan utils.ParsedTerraformPlan, digraphAPIKey, mode, repository, ref, commitSHA, terraformWorkspace, groupBy, outputFormat string, issueNumber int) (interface{}, error) {
+func invokeDigraphValidateAPI(parsedTFPlan utils.ParsedTerraformPlan, digraphAPIKey, mode, repository, ref, commitSHA, terraformWorkspace, groupBy, outputFormat string, issueNumber int) (string, error) {
 	requestBody := TerraformConfigValidatorInput{
 		TerraformPlan:      parsedTFPlan,
 		Repository:         repository,
@@ -45,7 +45,7 @@ func invokeDigraphValidateAPI(parsedTFPlan utils.ParsedTerraformPlan, digraphAPI
 		OutputFormat:       outputFormat,
 	}
 
-	var response interface{}
+	var response string
 
 	if mode == "ci/cd" {
 		if issueNumber > 0 {
@@ -55,7 +55,7 @@ func invokeDigraphValidateAPI(parsedTFPlan utils.ParsedTerraformPlan, digraphAPI
 			requestBody.CommitSHA = commitSHA
 			requestBody.TriggeringActionEventName = "push"
 		} else {
-			return response, errors.New("invalid input- must specify pull request or commit sha")
+			return "", errors.New("invalid input- must specify pull request or commit sha")
 		}
 
 		if len(commitSHA) > 0 && len(ref) == 0 {
@@ -96,13 +96,7 @@ func invokeDigraphValidateAPI(parsedTFPlan utils.ParsedTerraformPlan, digraphAPI
 		return response, fmt.Errorf("client: error with http request: status code %d with body %s", res.StatusCode, body)
 	}
 
-	err = json.Unmarshal(body, &response)
-	if err != nil {
-		fmt.Printf("cannot unmarshal api response: %s\n", err)
-		return utils.ValidationResponse{}, err
-	}
-
-	return response, nil
+	return string(body), nil
 }
 
 func terraformRunCommand(cmd *cobra.Command) error {
