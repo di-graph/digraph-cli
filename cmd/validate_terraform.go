@@ -11,9 +11,12 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/di-graph/digraph/utils"
+	"github.com/di-graph/digraph/utils/hcl"
+	hclParser "github.com/di-graph/digraph/utils/hcl"
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 )
@@ -104,6 +107,7 @@ func terraformRunCommand(cmd *cobra.Command) error {
 	jsonPathPlan, _ := cmd.Flags().GetString("json-path-plan")   // filepath of the saved plan in json format
 	tfRawPath, _ := cmd.Flags().GetString("output-path-plan")    // filepath of the saved raw output of the tf plan
 	tfJsonOutput, _ := cmd.Flags().GetString("json-output-plan") // output of tf plan in json format as string
+	tfHCLDirectory, _ := cmd.Flags().GetString("hcl-directory")  // raw HCL terraform directory
 
 	terraformAPIKey, _ := cmd.Flags().GetString("terraform-api-key")
 	digraphAPIKey, _ := cmd.Flags().GetString("api-key")
@@ -129,6 +133,41 @@ func terraformRunCommand(cmd *cobra.Command) error {
 
 	var jsonFilePath string
 	var err error
+
+	if len(tfHCLDirectory) > 0 {
+		// fileContent, err := os.ReadFile("/Users/bahar/src/digraph-repo/terraform/aws.tf")
+		fileContent, err := hcl.ParseTFFiles(tfHCLDirectory, "")
+		if err != nil {
+			return fmt.Errorf(err.Error())
+		}
+
+		parsedFile, err := hclParser.ParseHclToJson("hcl2json.json", string(fileContent), hclParser.ModuleVariables{})
+		if err != nil {
+			return fmt.Errorf(err.Error())
+		}
+
+		// jsonBytes, err := json.Marshal(parsedFile)
+		// if err != nil {
+		// 	return fmt.Errorf(err.Error())
+		// }
+		tempFile, err := os.Create("hcl2json.json")
+		if err != nil {
+			return fmt.Errorf(err.Error())
+		}
+
+		defer tempFile.Close()
+		_, err = tempFile.Write([]byte(parsedFile))
+		if err != nil {
+			return fmt.Errorf(err.Error())
+		}
+		path, err := filepath.Abs(filepath.Join(filepath.Dir(tempFile.Name()), tempFile.Name()))
+		if err != nil {
+			return fmt.Errorf(err.Error())
+		}
+		fmt.Printf("%v\n", path)
+		return nil
+	}
+
 	if len(tfPlanOutput) > 0 {
 		if len(terraformAPIKey) == 0 {
 			err := godotenv.Load(".env")
@@ -223,6 +262,7 @@ func validateTerraform() *cobra.Command {
 	tfCmd.Flags().String("output-path-plan", "", "Filepath for terminal output from terraform plan command")
 	tfCmd.Flags().String("json-path-plan", "", "Filepath to terraform plan JSON file")
 	tfCmd.Flags().String("json-output-plan", "", "JSON output from terraform plan command")
+	tfCmd.Flags().String("hcl-directory", "", "Directory path for HCL files (*.tf)")
 
 	tfCmd.Flags().String("terraform-api-key", "", "Terraform API Key")
 	tfCmd.Flags().String("terraform-workspace", "", "Terraform workspace for associated plan")
