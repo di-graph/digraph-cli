@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/di-graph/digraph/utils"
+	"github.com/di-graph/digraph/utils/hcl"
 	hclParser "github.com/di-graph/digraph/utils/hcl"
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
@@ -135,7 +136,7 @@ func terraformRunCommand(cmd *cobra.Command) error {
 
 	if len(tfHCLDirectory) > 0 {
 		// fileContent, err := os.ReadFile("/Users/bahar/src/digraph-repo/terraform/aws.tf")
-		fileContent, err := parseTFFiles(tfHCLDirectory, "")
+		fileContent, err := hcl.ParseTFFiles(tfHCLDirectory, "")
 		if err != nil {
 			return fmt.Errorf(err.Error())
 		}
@@ -267,32 +268,4 @@ func validateTerraform() *cobra.Command {
 	tfCmd.Flags().String("terraform-workspace", "", "Terraform workspace for associated plan")
 
 	return tfCmd
-}
-
-func parseTFFiles(tfHCLDirectory string, fileContents string) (string, error) {
-	entities, err := os.ReadDir(tfHCLDirectory)
-	path, _ := filepath.Abs(tfHCLDirectory)
-	resultString := fileContents
-	if err != nil {
-		return resultString, fmt.Errorf(err.Error())
-	}
-	for _, entity := range entities {
-		if entity.IsDir() {
-			resultString, err = parseTFFiles(filepath.Join(path, entity.Name()), fileContents)
-			if err != nil {
-				return resultString, fmt.Errorf(err.Error())
-			}
-		} else {
-			newFilepath := filepath.Join(path, entity.Name())
-			extension := filepath.Ext(newFilepath)
-			if extension == ".tf" {
-				file, err := os.ReadFile(newFilepath)
-				if err != nil {
-					return resultString, fmt.Errorf(err.Error())
-				}
-				resultString = resultString + string(file)
-			}
-		}
-	}
-	return resultString, nil
 }
