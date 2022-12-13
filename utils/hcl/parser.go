@@ -53,7 +53,7 @@ func ParseHclToJson(fileName string, fileContent string, variables ModuleVariabl
 		return "", createInternalHCLParsingError([]error{err})
 	}
 
-	jsonBytes, err := json.MarshalIndent(parsedFile, "", "\t")
+	jsonBytes, err := json.Marshal(parsedFile)
 	if err != nil {
 		return "", createInternalJSONParsingError([]error{err})
 	}
@@ -71,7 +71,7 @@ func parseFile(file *hcl.File, variables ModuleVariables) (JSON, error) {
 
 	body, ok := file.Body.(*hclsyntax.Body)
 	if !ok {
-		return nil, fmt.Errorf("Failed to parse hcl.Body to hclsyntax.Body type")
+		return nil, fmt.Errorf("failed to parse hcl.Body to hclsyntax.Body type")
 	}
 
 	out := make(JSON)
@@ -88,13 +88,13 @@ func (parser *Parser) parseBody(body *hclsyntax.Body, out JSON) error {
 	for key, value := range body.Attributes {
 		out[key], err = parser.parseExpression(value.Expr)
 		if err != nil {
-			return fmt.Errorf("Failed to parse expression: %w", err)
+			return fmt.Errorf("failed to parse expression: %w", err)
 		}
 	}
 
 	for _, block := range body.Blocks {
 		if err := parser.parseBlock(block, out); err != nil {
-			return fmt.Errorf("Failed to parse block: %w", err)
+			return fmt.Errorf("failed to parse block: %w", err)
 		}
 	}
 
@@ -136,7 +136,7 @@ func (parser *Parser) parseLabels(key string, labels []string, out JSON) (string
 			var ok bool
 			out, ok = out[key].(JSON)
 			if !ok {
-				return "", nil, fmt.Errorf("Failed to convert block to JSON: %v.%v", key, strings.Join(labels, "."))
+				return "", nil, fmt.Errorf("failed to convert block to JSON: %v.%v", key, strings.Join(labels, "."))
 			}
 		} else {
 			out[key] = make(JSON)
