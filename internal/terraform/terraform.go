@@ -1,10 +1,10 @@
-package utils
+package terraform
 
 import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -78,7 +78,7 @@ func GetTerraformPlanID(runId string, terraformAPIKey string) (string, error) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
@@ -112,7 +112,7 @@ func GetAndSaveTerraformPlanJSON(planId string, terraformAPIKey string) (string,
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
@@ -161,7 +161,7 @@ func ParseTerraformPlanJSON(jsonFilePath string) (ParsedTerraformPlan, error) {
 		return ParsedTerraformPlan{}, fmt.Errorf("error %s", err.Error())
 	}
 
-	jsonByteValue, _ := ioutil.ReadAll(jsonFile)
+	jsonByteValue, _ := io.ReadAll(jsonFile)
 
 	var parsedJSONPlan ParsedTerraformPlan
 

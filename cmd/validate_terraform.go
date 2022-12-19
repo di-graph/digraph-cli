@@ -13,27 +13,27 @@ import (
 	"os"
 	"time"
 
-	"github.com/di-graph/digraph/utils"
+	"github.com/di-graph/digraph/internal/terraform"
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 )
 
 type TerraformConfigValidatorInput struct {
-	TerraformPlan             utils.ParsedTerraformPlan `json:"terraform_plan"`
-	Repository                string                    `json:"repository"`
-	TriggeringActionEventName string                    `json:"event_name"`
-	IssueNumber               int                       `json:"issue_number"`
-	CommitSHA                 string                    `json:"commit_sha"`
-	Ref                       string                    `json:"ref"`
-	InvocationMode            string                    `json:"invocation_mode"`
-	TerraformWorkspace        string                    `json:"terraform_workspace"`
-	GroupBy                   string                    `json:"group_by"`
-	OutputFormat              string                    `json:"output_format"`
+	TerraformPlan             terraform.ParsedTerraformPlan `json:"terraform_plan"`
+	Repository                string                        `json:"repository"`
+	TriggeringActionEventName string                        `json:"event_name"`
+	IssueNumber               int                           `json:"issue_number"`
+	CommitSHA                 string                        `json:"commit_sha"`
+	Ref                       string                        `json:"ref"`
+	InvocationMode            string                        `json:"invocation_mode"`
+	TerraformWorkspace        string                        `json:"terraform_workspace"`
+	GroupBy                   string                        `json:"group_by"`
+	OutputFormat              string                        `json:"output_format"`
 }
 
 const validationURL = "https://app.getdigraph.com/api/validate/terraform"
 
-func invokeDigraphValidateAPI(parsedTFPlan utils.ParsedTerraformPlan, digraphAPIKey, mode, repository, ref, commitSHA, terraformWorkspace, groupBy, outputFormat string, issueNumber int) (string, error) {
+func invokeDigraphValidateAPI(parsedTFPlan terraform.ParsedTerraformPlan, digraphAPIKey, mode, repository, ref, commitSHA, terraformWorkspace, groupBy, outputFormat string, issueNumber int) (string, error) {
 	requestBody := TerraformConfigValidatorInput{
 		TerraformPlan:      parsedTFPlan,
 		Repository:         repository,
@@ -140,7 +140,7 @@ func terraformRunCommand(cmd *cobra.Command) error {
 			terraformAPIKey = os.Getenv("terraform-api-key")
 		}
 
-		jsonFilePath, err = utils.FetchRemoteTerraformPlan(tfPlanOutput, terraformAPIKey)
+		jsonFilePath, err = terraform.FetchRemoteTerraformPlan(tfPlanOutput, terraformAPIKey)
 		if err != nil {
 			return fmt.Errorf("error getting plan json %s", err.Error())
 		}
@@ -162,7 +162,7 @@ func terraformRunCommand(cmd *cobra.Command) error {
 		}
 
 		rawByteValue, _ := io.ReadAll(rawOutputFile)
-		jsonFilePath, err = utils.FetchRemoteTerraformPlan(string(rawByteValue), terraformAPIKey)
+		jsonFilePath, err = terraform.FetchRemoteTerraformPlan(string(rawByteValue), terraformAPIKey)
 		if err != nil {
 			return fmt.Errorf("error getting plan json %s", err.Error())
 		}
@@ -182,7 +182,7 @@ func terraformRunCommand(cmd *cobra.Command) error {
 		return fmt.Errorf("must specify raw-output-plan or json-path-plan or output-path-plan or json-output-plan")
 	}
 
-	parsedPlan, err := utils.ParseTerraformPlanJSON(jsonFilePath)
+	parsedPlan, err := terraform.ParseTerraformPlanJSON(jsonFilePath)
 	if err != nil {
 		return fmt.Errorf("error parsing JSON %s", err.Error())
 	}

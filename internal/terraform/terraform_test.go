@@ -1,11 +1,11 @@
-package utils_test
+package terraform_test
 
 import (
 	"path/filepath"
 	"runtime"
 	"testing"
 
-	"github.com/di-graph/digraph/utils"
+	"github.com/di-graph/digraph/internal/terraform"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,13 +23,13 @@ const EXAMPLE_PLAN_URL = "https://app.terraform.io/app/digraph/digraph-infrastru
 
 func TestParseTerraformURL(t *testing.T) {
 
-	url, err := utils.ParseTerraformURL(EXAMPLE_TF_PLAN_OUTPUT)
+	url, err := terraform.ParseTerraformURL(EXAMPLE_TF_PLAN_OUTPUT)
 	assert.Nil(t, err)
 	assert.Equal(t, EXAMPLE_PLAN_URL, url)
 }
 
 func TestParseTerraformRunID(t *testing.T) {
-	runId, err := utils.ParseTerraformRunID(EXAMPLE_PLAN_URL)
+	runId, err := terraform.ParseTerraformRunID(EXAMPLE_PLAN_URL)
 	assert.Nil(t, err)
 	assert.Equal(t, "run-y1Fbus1JCAxSPshp", runId)
 }
@@ -38,7 +38,7 @@ func TestParseTerraformPlanJSON(t *testing.T) {
 	_, filename, _, _ := runtime.Caller(0)
 	dirPath := filepath.Dir(filename)
 	jsonFilePath := filepath.Join(dirPath, "test_fixtures", "soc-2-violations.json")
-	parsedPlan, err := utils.ParseTerraformPlanJSON(jsonFilePath)
+	parsedPlan, err := terraform.ParseTerraformPlanJSON(jsonFilePath)
 	assert.Nil(t, err)
 	assert.Equal(t, len(parsedPlan.ResourceChanges), 11)
 	assert.Equal(t, parsedPlan.ResourceChanges[1].Name, "public_vm")
