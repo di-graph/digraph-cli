@@ -1,2 +1,2 @@
-# integration-testing-cli
-Testing repo for CLI implementation
+# Digraph CLI
+Digraph CLI for configuration validation
