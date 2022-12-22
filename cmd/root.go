@@ -1,6 +1,5 @@
 /*
 Copyright © 2022 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
@@ -13,7 +12,7 @@ import (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:     "digraph",
-	Version: "v0.0.18",
+	Version: "v0.0.19",
 	Short:   "Digraph CLI for policy configuration validation",
 	Long:    ` Digraph CLI for policy configuration validation. To invoke, please call digraph validate terraform with the appropriate flags.`,
 	// Uncomment the following line if your bare application
