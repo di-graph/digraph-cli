@@ -12,7 +12,7 @@ import (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:     "digraph",
-	Version: "v0.0.19",
+	Version: "v0.0.20",
 	Short:   "Digraph CLI for policy configuration validation",
 	Long:    ` Digraph CLI for policy configuration validation. To invoke, please call digraph validate terraform with the appropriate flags.`,
 	// Uncomment the following line if your bare application
@@ -26,6 +26,11 @@ func Execute() {
 	rootCmd.SetVersionTemplate("Digraph {{.Version}}\n")
 	err := rootCmd.Execute()
 	if err != nil {
+		_, ok := err.(*FlagParsingError)
+		if ok {
+			// we do not want to error out explicitly on flag parsing issues. Instead fail gracefully
+			os.Exit(0)
+		}
 		os.Exit(1)
 	}
 }

@@ -4,6 +4,8 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"strings"
+
 	"github.com/spf13/cobra"
 )
 
@@ -16,6 +18,18 @@ var validate = &cobra.Command{
 		// for backwards compatability we run the terraform command when no sub command specified
 		return terraformRunCommand(cmd)
 	},
+}
+
+func FlagErrorFunc(cmd *cobra.Command, err error) error {
+	if err == nil {
+		return err
+	}
+
+	if strings.Contains(err.Error(), "parsing") {
+		return &FlagParsingError{Err: err}
+	}
+
+	return err
 }
 
 func init() {
@@ -37,7 +51,7 @@ func init() {
 
 	validate.PersistentFlags().String("group-by", "resource", "Group results based on resource or policy")
 	validate.PersistentFlags().String("output-format", "terminal", "Format in which to output results")
-
+	validate.SetFlagErrorFunc(FlagErrorFunc)
 	rootCmd.AddCommand(validate)
 	validate.AddCommand(validateKubernetes())
 	validate.AddCommand(validateTerraform())
