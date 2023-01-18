@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/di-graph/digraph/internal/formatting"
 	"github.com/tidwall/gjson"
 	"mvdan.cc/xurls/v2"
 )
@@ -176,8 +177,24 @@ func ParseTerraformPlanJSON(jsonFilePath string) (ParsedTerraformPlan, error) {
 		}
 	}
 
+	changeBytes, err := json.Marshal(actualChanges)
+	if err != nil {
+		return ParsedTerraformPlan{}, fmt.Errorf("error marshaling parsed plan changes %s", err.Error())
+	}
+
+	sanitizedPlan, err := formatting.SanitizeValuesByKey(changeBytes)
+	if err != nil {
+		return ParsedTerraformPlan{}, fmt.Errorf("error sanitizing values %s", err.Error())
+	}
+
+	var changes []ResourceChange
+	err = json.Unmarshal(sanitizedPlan, &changes)
+	if err != nil {
+		return ParsedTerraformPlan{}, fmt.Errorf("error unmarshaling changes %s", err.Error())
+	}
+
 	var parsedPlanChangesOnly = ParsedTerraformPlan{
-		ResourceChanges: actualChanges,
+		ResourceChanges: changes,
 	}
 
 	defer jsonFile.Close()
