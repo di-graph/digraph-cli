@@ -54,6 +54,8 @@ func TestSanitizeTerraformPlanJSON(t *testing.T) {
 	assert.Equal(t, parsedPlan.ResourceChanges[1].Name, "public_vm")
 	changeMap := parsedPlan.ResourceChanges[1].Change.After.(map[string]interface{})
 	assert.Equal(t, true, changeMap["associate_public_ip_address"])
+	assert.Equal(t, false, changeMap["get_password_data"])
+	assert.Equal(t, "TEST_UNCHANGED", changeMap["kms_key_id"])
 	assert.Equal(t, "REDACTED", changeMap["password"])
 	assert.Equal(t, "REDACTED", changeMap["db_key"])
 }

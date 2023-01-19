@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/di-graph/digraph/internal/formatting"
+	inputsanitizer "github.com/di-graph/input-sanitizer"
 	"github.com/tidwall/gjson"
 	"mvdan.cc/xurls/v2"
 )
@@ -181,8 +181,7 @@ func ParseTerraformPlanJSON(jsonFilePath string) (ParsedTerraformPlan, error) {
 	if err != nil {
 		return ParsedTerraformPlan{}, fmt.Errorf("error marshaling parsed plan changes %s", err.Error())
 	}
-
-	sanitizedPlan, err := formatting.SanitizeValuesByKey(changeBytes)
+	sanitizedPlan, err := inputsanitizer.SanitizeValuesByKey(changeBytes)
 	if err != nil {
 		return ParsedTerraformPlan{}, fmt.Errorf("error sanitizing values %s", err.Error())
 	}
