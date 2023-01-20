@@ -29,11 +29,12 @@ type TerraformConfigValidatorInput struct {
 	TerraformWorkspace        string                        `json:"terraform_workspace"`
 	GroupBy                   string                        `json:"group_by"`
 	OutputFormat              string                        `json:"output_format"`
+	TraceId                   string                        `json:"trace_id"`
 }
 
 const validationURL = "https://app.getdigraph.com/api/validate/terraform"
 
-func invokeDigraphValidateAPI(parsedTFPlan terraform.ParsedTerraformPlan, digraphAPIKey, mode, repository, ref, commitSHA, terraformWorkspace, groupBy, outputFormat string, issueNumber int) (string, error) {
+func invokeDigraphValidateAPI(parsedTFPlan terraform.ParsedTerraformPlan, digraphAPIKey, mode, repository, ref, commitSHA, terraformWorkspace, groupBy, outputFormat, traceId string, issueNumber int) (string, error) {
 	requestBody := TerraformConfigValidatorInput{
 		TerraformPlan:      parsedTFPlan,
 		Repository:         repository,
@@ -42,6 +43,7 @@ func invokeDigraphValidateAPI(parsedTFPlan terraform.ParsedTerraformPlan, digrap
 		TerraformWorkspace: terraformWorkspace,
 		GroupBy:            groupBy,
 		OutputFormat:       outputFormat,
+		TraceId:            traceId,
 	}
 
 	var response string
@@ -118,7 +120,6 @@ func terraformRunCommand(cmd *cobra.Command) error {
 	outputFormat, _ := cmd.Flags().GetString("output-format")
 
 	traceId, _ := cmd.Flags().GetString("traceId")
-	fmt.Printf("Trace ID is %s", traceId)
 
 	if len(digraphAPIKey) == 0 {
 		err := godotenv.Load(".env")
@@ -196,7 +197,7 @@ func terraformRunCommand(cmd *cobra.Command) error {
 		mode = "ci/cd"
 	}
 
-	output, err := invokeDigraphValidateAPI(parsedPlan, digraphAPIKey, mode, repository, ref, commitSHA, terraformWorkspace, groupBy, outputFormat, issueNumber)
+	output, err := invokeDigraphValidateAPI(parsedPlan, digraphAPIKey, mode, repository, ref, commitSHA, terraformWorkspace, groupBy, outputFormat, traceId, issueNumber)
 	if err != nil {
 		return fmt.Errorf("error calling API %s", err.Error())
 	}
