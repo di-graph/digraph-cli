@@ -117,6 +117,9 @@ func terraformRunCommand(cmd *cobra.Command) error {
 	groupBy, _ := cmd.Flags().GetString("group-by")
 	outputFormat, _ := cmd.Flags().GetString("output-format")
 
+	traceId, _ := cmd.Flags().GetString("traceId")
+	fmt.Printf("Trace ID is %s", traceId)
+
 	if len(digraphAPIKey) == 0 {
 		err := godotenv.Load(".env")
 
