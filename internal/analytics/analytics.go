@@ -123,7 +123,7 @@ func (a *AnalyticsWrapper) GetOutputData() *analyticsData {
 	}
 	for _, arg := range a.args {
 		if strings.HasPrefix(arg, "--") {
-			if !strings.HasPrefix(arg, "--api-key") || !strings.HasPrefix(arg, "--terraform-api-key") {
+			if !(strings.Contains(arg, "api-key=") || strings.Contains(arg, "terraform-api-key=")) {
 				commandArgs = append(commandArgs, arg)
 			}
 			if strings.HasPrefix(arg, "--issue-number") || strings.HasPrefix(arg, "--commit-sha") {
