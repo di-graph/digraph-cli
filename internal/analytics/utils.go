@@ -12,7 +12,9 @@ func GetAPIKey(args []string) string {
 	for _, arg := range args {
 		if strings.HasPrefix(arg, "--api-key") {
 			splitStr := strings.Split(arg, "--api-key=")
-			apiKey = splitStr[0]
+			if len(splitStr) > 1 {
+				apiKey = splitStr[1]
+			}
 		}
 	}
 	if len(apiKey) == 0 {
