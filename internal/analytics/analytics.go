@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os/user"
 	"runtime"
+	"strings"
 	"time"
 
 	inputsanitizer "github.com/di-graph/input-sanitizer"
@@ -17,7 +19,6 @@ import (
 type Analytics interface {
 	SetClient(clientFunc func() *http.Client)
 	SetCmdArgs(args []string)
-	SetOrg(org string)
 	SetVersion(version string)
 	GetRequest() (*http.Request, error)
 	Send() (*http.Response, error)
@@ -30,7 +31,6 @@ type AnalyticsWrapper struct {
 	clientFunc func() *http.Client
 	headerFunc func() http.Header
 
-	org       string
 	version   string
 	created   time.Time
 	args      []string
@@ -40,11 +40,13 @@ type AnalyticsWrapper struct {
 
 type analyticsData struct {
 	Command       string        `json:"command"`
+	Subcommand    string        `json:"subcommand"`
 	Args          []string      `json:"args"`
 	OsPlatform    string        `json:"os_platform"`
 	OsArch        string        `json:"os_arch"`
 	Os            string        `json:"os"`
 	OsRelease     string        `json:"os_release"`
+	OsId          string        `json:"os_id"`
 	Id            string        `json:"id"`
 	Version       string        `json:"version"`
 	DurationMs    int64         `json:"duration_ms"`
@@ -72,10 +74,6 @@ func New() Analytics {
 
 func (a *AnalyticsWrapper) SetCmdArgs(args []string) {
 	a.args = args
-}
-
-func (a *AnalyticsWrapper) SetOrg(org string) {
-	a.org = org
 }
 
 func (a *AnalyticsWrapper) SetVersion(version string) {
@@ -106,21 +104,43 @@ func (a *AnalyticsWrapper) GetOutputData() *analyticsData {
 	output := &analyticsData{}
 
 	output.Id = a.GetTraceId()
-
-	output.Args = a.args[1:]
 	if len(a.args) > 0 {
 		output.Command = a.args[0]
 	}
 
+	var isCIMode = false
+	var commandArgs []string
+	if len(a.args) > 1 {
+		if !strings.HasPrefix(a.args[1], "--") {
+			output.Subcommand = a.args[1]
+		}
+	}
+	for _, arg := range a.args {
+		if strings.HasPrefix(arg, "--") {
+			if !strings.HasPrefix(arg, "--api-key") || !strings.HasPrefix(arg, "--terraform-api-key") {
+				commandArgs = append(commandArgs, arg)
+			}
+			if strings.HasPrefix(arg, "--issue-number") || strings.HasPrefix(arg, "--commit-sha") {
+				isCIMode = true
+			}
+		}
+	}
+	output.Args = commandArgs
+	output.Ci = isCIMode
+
+	user, _ := user.Current()
+
+	output.OsId = fmt.Sprintf("%s_%s_%s", user.Gid, user.Uid, user.Username)
+
 	output.OsPlatform = runtime.GOOS
 	output.OsArch = runtime.GOARCH
 	output.Version = a.version
-	output.DurationMs = int64(time.Since(a.created).Milliseconds())
 
 	if a.lastError != nil {
 		output.ErrorMetadata = ErrorMetadata{ErrorMessage: a.lastError.Error()}
 	}
 
+	output.DurationMs = int64(time.Since(a.created).Milliseconds())
 	return output
 }
 

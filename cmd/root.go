@@ -31,7 +31,6 @@ func Execute() {
 
 	analyticsWrapper := analytics.New()
 
-	analyticsWrapper.SetOrg("test")
 	analyticsWrapper.SetClient(func() *http.Client {
 		return http.DefaultClient
 	})
