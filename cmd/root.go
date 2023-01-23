@@ -38,6 +38,8 @@ func Execute() {
 	analyticsWrapper.SetVersion(VERSION)
 	analyticsWrapper.SetCmdArgs(os.Args[1:])
 	analyticsWrapper.SetTraceId()
+	apiKey := analytics.GetAPIKey(os.Args[1:])
+	analyticsWrapper.SetAPIKey(apiKey)
 	traceId := analyticsWrapper.GetTraceId()
 	rootCmd.PersistentFlags().String("traceId", traceId, "")
 	rootCmd.PersistentFlags().MarkHidden("traceId")

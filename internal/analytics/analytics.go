@@ -25,6 +25,7 @@ type Analytics interface {
 	SetTraceId()
 	GetTraceId() string
 	AddError(err error)
+	SetAPIKey(apiKey string)
 }
 
 type AnalyticsWrapper struct {
@@ -133,9 +134,6 @@ func (a *AnalyticsWrapper) GetOutputData() *analyticsData {
 	output.Args = commandArgs
 	output.Ci = isCIMode
 
-	apiKey := GetAPIKey(a.args)
-	a.SetAPIKey(apiKey)
-
 	user, _ := user.Current()
 
 	output.OsId = fmt.Sprintf("%s_%s_%s", user.Gid, user.Uid, user.Username)
@@ -169,6 +167,9 @@ func (a *AnalyticsWrapper) GetRequest() (*http.Request, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Printf("Length of apikey is %d", len(a.apiKey))
+
 	request.Header.Set("X-Digraph-Secret-Key", a.apiKey)
 	request.Header.Set("Content-Type", "application/json; charset=utf-8")
 
