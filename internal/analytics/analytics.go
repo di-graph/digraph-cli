@@ -63,7 +63,7 @@ type dataOutput struct {
 	Data analyticsData `json:"data"`
 }
 
-const ANALYTICS_URL = ""
+const ANALYTICS_URL = "https://app.getdigraph.com/api/validate/analytics"
 
 func New() Analytics {
 	a := &AnalyticsWrapper{}
