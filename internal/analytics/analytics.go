@@ -36,6 +36,7 @@ type AnalyticsWrapper struct {
 	args      []string
 	traceId   string
 	lastError error
+	apiKey    string
 }
 
 type analyticsData struct {
@@ -78,6 +79,10 @@ func (a *AnalyticsWrapper) SetCmdArgs(args []string) {
 
 func (a *AnalyticsWrapper) SetVersion(version string) {
 	a.version = version
+}
+
+func (a *AnalyticsWrapper) SetAPIKey(apiKey string) {
+	a.apiKey = apiKey
 }
 
 func (a *AnalyticsWrapper) SetClient(clientFunc func() *http.Client) {
@@ -128,6 +133,9 @@ func (a *AnalyticsWrapper) GetOutputData() *analyticsData {
 	output.Args = commandArgs
 	output.Ci = isCIMode
 
+	apiKey := GetAPIKey(a.args)
+	a.SetAPIKey(apiKey)
+
 	user, _ := user.Current()
 
 	output.OsId = fmt.Sprintf("%s_%s_%s", user.Gid, user.Uid, user.Username)
@@ -146,7 +154,6 @@ func (a *AnalyticsWrapper) GetOutputData() *analyticsData {
 
 func (a *AnalyticsWrapper) GetRequest() (*http.Request, error) {
 	output := a.GetOutputData()
-
 	outputJson, err := json.Marshal(dataOutput{Data: *output})
 	if err != nil {
 		return nil, err
@@ -162,7 +169,7 @@ func (a *AnalyticsWrapper) GetRequest() (*http.Request, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	request.Header.Set("X-Digraph-Secret-Key", a.apiKey)
 	request.Header.Set("Content-Type", "application/json; charset=utf-8")
 
 	return request, err
