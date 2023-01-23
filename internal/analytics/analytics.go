@@ -168,8 +168,6 @@ func (a *AnalyticsWrapper) GetRequest() (*http.Request, error) {
 		return nil, err
 	}
 
-	fmt.Printf("Length of apikey is %d", len(a.apiKey))
-
 	request.Header.Set("X-Digraph-Secret-Key", a.apiKey)
 	request.Header.Set("Content-Type", "application/json; charset=utf-8")
 
