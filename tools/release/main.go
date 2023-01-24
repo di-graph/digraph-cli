@@ -17,9 +17,9 @@ import (
 func main() {
 	cli := newAuthedGithubClient()
 
-	release, err := createDraftRelease(cli)
+	release, err := createRelease(cli)
 	if err != nil {
-		fmt.Printf("failed to create draft release %s", err)
+		fmt.Printf("failed to create release %s", err)
 		return
 	}
 
@@ -38,7 +38,7 @@ func main() {
 	fmt.Printf("successfully created draft release")
 }
 
-func createDraftRelease(cli *github.Client) (*github.RepositoryRelease, error) {
+func createRelease(cli *github.Client) (*github.RepositoryRelease, error) {
 	name := github.String(strings.Join(strings.Split(os.Getenv("GITHUB_REF"), "/")[2:], "/"))
 	o, res, err := cli.Repositories.CreateRelease(
 		context.Background(),
@@ -48,7 +48,7 @@ func createDraftRelease(cli *github.Client) (*github.RepositoryRelease, error) {
 			Name:                 name,
 			TagName:              name,
 			TargetCommitish:      github.String(os.Getenv("GITHUB_SHA")),
-			Draft:                github.Bool(true),
+			Draft:                github.Bool(false), // publish release automatically
 			GenerateReleaseNotes: github.Bool(true),
 		},
 	)
