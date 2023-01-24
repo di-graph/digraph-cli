@@ -136,7 +136,7 @@ func (a *AnalyticsWrapper) GetOutputData() *analyticsData {
 
 	hsha2 := sha256.Sum256([]byte(a.apiKey))
 
-	output.OsId = fmt.Sprintf("%v", hsha2)
+	output.OsId = fmt.Sprintf("%x", hsha2)
 
 	output.OsPlatform = runtime.GOOS
 	output.OsArch = runtime.GOARCH
