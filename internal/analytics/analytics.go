@@ -3,11 +3,11 @@ package analytics
 import (
 	"bytes"
 	"crypto/sha1"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"os/user"
 	"runtime"
 	"strings"
 	"time"
@@ -134,9 +134,9 @@ func (a *AnalyticsWrapper) GetOutputData() *analyticsData {
 	output.Args = commandArgs
 	output.Ci = isCIMode
 
-	user, _ := user.Current()
+	hsha2 := sha256.Sum256([]byte(a.apiKey))
 
-	output.OsId = fmt.Sprintf("%s_%s_%s", user.Gid, user.Uid, user.Username)
+	output.OsId = fmt.Sprintf("%v", hsha2)
 
 	output.OsPlatform = runtime.GOOS
 	output.OsArch = runtime.GOARCH
