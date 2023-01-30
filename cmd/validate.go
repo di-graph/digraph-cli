@@ -52,7 +52,6 @@ func init() {
 	validate.PersistentFlags().String("group-by", "resource", "Group results based on resource or policy")
 	validate.PersistentFlags().String("output-format", "terminal", "Format in which to output results")
 	validate.SetFlagErrorFunc(FlagErrorFunc)
-	rootCmd.AddCommand(validate)
 	validate.AddCommand(validateKubernetes())
 	validate.AddCommand(validateTerraform())
 }

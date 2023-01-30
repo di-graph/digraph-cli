@@ -4,6 +4,7 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"io"
 	"net/http"
 	"os"
 
@@ -13,21 +14,38 @@ import (
 
 const VERSION = "v0.0.28"
 
+var OutputWriter io.Writer = os.Stdout
+
 // rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:     "digraph",
-	Version: VERSION,
-	Short:   "Digraph CLI for policy configuration validation",
-	Long:    ` Digraph CLI for policy configuration validation. To invoke, please call digraph validate terraform with the appropriate flags.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+// var rootCmd = &cobra.Command{
+// 	Use:     "digraph",
+// 	Version: VERSION,
+// 	Short:   "Digraph CLI for policy configuration validation",
+// 	Long:    ` Digraph CLI for policy configuration validation. To invoke, please call digraph validate terraform with the appropriate flags.`,
+// 	// Uncomment the following line if your bare application
+// 	// has an action associated with it:
+// 	// Run: func(cmd *cobra.Command, args []string) { },
+// }
+
+func RootCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:     "digraph",
+		Version: VERSION,
+		Short:   "Digraph CLI for policy configuration validation",
+		Long:    ` Digraph CLI for policy configuration validation. To invoke, please call digraph validate terraform with the appropriate flags.`,
+		// Uncomment the following line if your bare application
+		// has an action associated with it:
+		// Run: func(cmd *cobra.Command, args []string) { },
+	}
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
+func Execute(rootCmd *cobra.Command) error {
+	rootCmd.SetOut(OutputWriter)
+	rootCmd.SetErr(OutputWriter)
 	rootCmd.SetVersionTemplate("Digraph {{.Version}}\n")
+	rootCmd.AddCommand(validate)
 
 	analyticsWrapper := analytics.New()
 
@@ -52,10 +70,13 @@ func Execute() {
 		_, ok := err.(*FlagParsingError)
 		if ok {
 			// we do not want to error out explicitly on flag parsing issues. Instead fail gracefully
-			os.Exit(0)
+			return nil
+			// os.Exit(0)
 		}
-		os.Exit(1)
+		return err
+		// os.Exit(1)
 	}
+	return err
 }
 
 func init() {
@@ -68,5 +89,4 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	// rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-
 }
