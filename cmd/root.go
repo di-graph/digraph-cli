@@ -16,17 +16,6 @@ const VERSION = "v0.0.29"
 
 var OutputWriter io.Writer = os.Stdout
 
-// rootCmd represents the base command when called without any subcommands
-// var rootCmd = &cobra.Command{
-// 	Use:     "digraph",
-// 	Version: VERSION,
-// 	Short:   "Digraph CLI for policy configuration validation",
-// 	Long:    ` Digraph CLI for policy configuration validation. To invoke, please call digraph validate terraform with the appropriate flags.`,
-// 	// Uncomment the following line if your bare application
-// 	// has an action associated with it:
-// 	// Run: func(cmd *cobra.Command, args []string) { },
-// }
-
 func RootCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:     "digraph",
@@ -71,10 +60,8 @@ func Execute(rootCmd *cobra.Command) error {
 		if ok {
 			// we do not want to error out explicitly on flag parsing issues. Instead fail gracefully
 			return nil
-			// os.Exit(0)
 		}
 		return err
-		// os.Exit(1)
 	}
 	return err
 }
