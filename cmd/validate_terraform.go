@@ -32,7 +32,7 @@ type TerraformConfigValidatorInput struct {
 	TraceId                   string                        `json:"trace_id"`
 }
 
-const validationURL = "https://app.getdigraph.com/api/validate/terraform"
+var ValidationURL = "https://app.getdigraph.com/api/validate/terraform"
 
 func invokeDigraphValidateAPI(parsedTFPlan terraform.ParsedTerraformPlan, digraphAPIKey, mode, repository, ref, commitSHA, terraformWorkspace, groupBy, outputFormat, traceId string, issueNumber int) (string, error) {
 	requestBody := TerraformConfigValidatorInput{
@@ -73,7 +73,7 @@ func invokeDigraphValidateAPI(parsedTFPlan terraform.ParsedTerraformPlan, digrap
 		return response, err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, validationURL, bytes.NewReader(requestBytes))
+	req, err := http.NewRequest(http.MethodPost, ValidationURL, bytes.NewReader(requestBytes))
 	if err != nil {
 		return response, err
 	}
@@ -207,7 +207,7 @@ func terraformRunCommand(cmd *cobra.Command) error {
 		os.Remove(jsonFilePath)
 	}
 	if mode == "cli" {
-		fmt.Print(output)
+		fmt.Fprintf(OutputWriter, "%s\n", output)
 	}
 	return nil
 }

@@ -103,8 +103,6 @@ func validateKubernetes() *cobra.Command {
 
 			kubernetesManifest, _ := cmd.Flags().GetString("kubernetes-manifest")
 
-			fmt.Println("Called kubernetes command")
-
 			mode := "cli"
 			if len(commitSHA) > 0 || issueNumber > 0 {
 				mode = "ci/cd"
