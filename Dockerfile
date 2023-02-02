@@ -1,4 +1,4 @@
-FROM golang:1.19 
+FROM golang:1.20
 
 # Set Environment Variables
 SHELL ["/bin/bash", "-c"]
