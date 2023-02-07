@@ -25,10 +25,9 @@ func FlagErrorFunc(cmd *cobra.Command, err error) error {
 		return err
 	}
 
-	if strings.Contains(err.Error(), "parsing") {
+	if strings.Contains(err.Error(), "unknown flag") {
 		return &FlagParsingError{Err: err}
 	}
-
 	return err
 }
 

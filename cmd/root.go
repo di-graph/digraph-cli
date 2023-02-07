@@ -4,15 +4,17 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"os"
 
 	"github.com/di-graph/digraph/internal/analytics"
+	"github.com/di-graph/digraph/internal/error_handling"
 	"github.com/spf13/cobra"
 )
 
-const VERSION = "v0.0.29"
+const VERSION = "v0.0.30"
 
 var OutputWriter io.Writer = os.Stdout
 
@@ -59,11 +61,21 @@ func Execute(rootCmd *cobra.Command) error {
 		_, ok := err.(*FlagParsingError)
 		if ok {
 			// we do not want to error out explicitly on flag parsing issues. Instead fail gracefully
-			return nil
+			fmt.Println(error_handling.FormatError(err.Error()))
+			os.Exit(0)
+		}
+		reqErr, ok := err.(*error_handling.RequestError)
+		if ok {
+			// we want to handle certain status codes specifically
+			if reqErr.StatusCode == http.StatusUnauthorized {
+				fmt.Println(error_handling.FormatError("Unauthorized request- please check API key"))
+				os.Exit(1)
+			}
+			return err
 		}
 		return err
 	}
-	return err
+	return nil
 }
 
 func init() {
