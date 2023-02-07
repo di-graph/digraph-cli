@@ -13,6 +13,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/di-graph/digraph/internal/error_handling"
 	"github.com/di-graph/digraph/internal/terraform"
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
@@ -94,7 +95,7 @@ func invokeDigraphValidateAPI(parsedTFPlan terraform.ParsedTerraformPlan, digrap
 	body, _ := io.ReadAll(res.Body)
 
 	if res.StatusCode != http.StatusOK {
-		return response, fmt.Errorf("client: error with http request: status code %d with body %s", res.StatusCode, body)
+		return response, &error_handling.RequestError{StatusCode: res.StatusCode, Err: fmt.Errorf("Error with API %s", body)}
 	}
 
 	return string(body), nil
@@ -199,7 +200,7 @@ func terraformRunCommand(cmd *cobra.Command) error {
 
 	output, err := invokeDigraphValidateAPI(parsedPlan, digraphAPIKey, mode, repository, ref, commitSHA, terraformWorkspace, groupBy, outputFormat, traceId, issueNumber)
 	if err != nil {
-		return fmt.Errorf("error calling API %s", err.Error())
+		return err
 	}
 
 	if len(tfPlanOutput) > 0 {
