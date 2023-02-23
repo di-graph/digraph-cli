@@ -1,6 +1,7 @@
 package terraform_test
 
 import (
+	"fmt"
 	"path/filepath"
 	"runtime"
 	"testing"
@@ -42,6 +43,16 @@ func TestParseTerraformPlanJSON(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, len(parsedPlan.ResourceChanges), 11)
 	assert.Equal(t, parsedPlan.ResourceChanges[1].Name, "public_vm")
+}
+
+func TestParseTerraformPlanWrongFormatJSON(t *testing.T) {
+	_, filename, _, _ := runtime.Caller(0)
+	dirPath := filepath.Dir(filename)
+	jsonFilePath := filepath.Join(dirPath, "test_fixtures", "invalid-plan-format.json")
+	parsedPlan, err := terraform.ParseTerraformPlanJSON(jsonFilePath)
+	assert.ErrorContains(t, err, "got unexpected file format, expected terraform json")
+	fmt.Println(err.Error())
+	assert.Equal(t, terraform.ParsedTerraformPlan{}, parsedPlan)
 }
 
 func TestSanitizeTerraformPlanJSON(t *testing.T) {
