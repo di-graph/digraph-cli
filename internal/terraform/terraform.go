@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"reflect"
 	"strings"
 
 	inputsanitizer "github.com/di-graph/input-sanitizer"
@@ -168,7 +169,11 @@ func ParseTerraformPlanJSON(jsonFilePath string) (ParsedTerraformPlan, error) {
 
 	err = json.Unmarshal(jsonByteValue, &parsedJSONPlan)
 	if err != nil {
-		return ParsedTerraformPlan{}, fmt.Errorf("got unexpected file format, expected terraform json  %s", err.Error())
+		return ParsedTerraformPlan{}, fmt.Errorf("error unmarshaling plan json  %s", err.Error())
+	}
+
+	if reflect.DeepEqual(parsedJSONPlan, ParsedTerraformPlan{}) {
+		return ParsedTerraformPlan{}, fmt.Errorf("got unexpected file format, expected terraform json ")
 	}
 
 	var actualChanges []ResourceChange
