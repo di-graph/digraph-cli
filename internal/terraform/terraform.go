@@ -166,7 +166,10 @@ func ParseTerraformPlanJSON(jsonFilePath string) (ParsedTerraformPlan, error) {
 
 	var parsedJSONPlan ParsedTerraformPlan
 
-	json.Unmarshal(jsonByteValue, &parsedJSONPlan)
+	err = json.Unmarshal(jsonByteValue, &parsedJSONPlan)
+	if err != nil {
+		return ParsedTerraformPlan{}, fmt.Errorf("got unexpected file format, expected terraform json  %s", err.Error())
+	}
 
 	var actualChanges []ResourceChange
 	for _, resourceChange := range parsedJSONPlan.ResourceChanges {
