@@ -207,7 +207,7 @@ func terraformRunCommand(cmd *cobra.Command) error {
 		// cleanup by removing temp file that was written for terraform output case
 		os.Remove(jsonFilePath)
 	}
-	if mode == "cli" {
+	if mode == "cli" || outputFormat == "json" {
 		fmt.Fprintf(OutputWriter, "%s\n", output)
 	}
 	return nil
