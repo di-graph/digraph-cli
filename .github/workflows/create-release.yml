@@ -1,10 +1,9 @@
 name: Publish Docker image
 
-# on:
-#   push:
-#     tags:
-#       - "v*"
-on: push
+on:
+  push:
+    tags:
+      - "v*"
 
 jobs:
   push_to_registry:
@@ -19,10 +18,10 @@ jobs:
       - name: Build project
         run: |
           make build && make release
-      # - name: Release
-      #   run: go run tools/release/main.go
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Release
+        run: go run tools/release/main.go
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       - name: Log in to Docker Hub
@@ -45,13 +44,13 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}, ghcr.io/${{ github.repository }}:latest
           labels: ${{ steps.meta.outputs.labels }}
           push: true
-  # homebrew:
-  #   name: Bump Homebrew formula
-  #   needs: push_to_registry
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: dawidd6/action-homebrew-bump-formula@v3
-  #       with:
-  #         token: ${{secrets.HOMEBREW_GITHUB_TOKEN}}
-  #         tap: di-graph/homebrew-digraph
-  #         formula: digraph
+  homebrew:
+    name: Bump Homebrew formula
+    needs: push_to_registry
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dawidd6/action-homebrew-bump-formula@v3
+        with:
+          token: ${{secrets.HOMEBREW_GITHUB_TOKEN}}
+          tap: di-graph/homebrew-digraph
+          formula: digraph
