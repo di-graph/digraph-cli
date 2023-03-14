@@ -17,9 +17,9 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
-      # - name: Build project
-      #   run: |
-      #     make build && make release
+      - name: Build project
+        run: |
+          make build && make release
       # - name: Release
       #   run: go run tools/release/main.go
       #   env:
