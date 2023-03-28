@@ -19,7 +19,10 @@ func convertYAMLToJSON(yamlString string) (interface{}, error) {
 		return "", fmt.Errorf("error converting yaml to json %s", err.Error())
 	}
 	var jsonOutput interface{}
-	json.Unmarshal([]byte(jsonBytes), &jsonOutput)
+	err = json.Unmarshal([]byte(jsonBytes), &jsonOutput)
+	if err != nil {
+		return "", fmt.Errorf("error unmarshaling json %s", err.Error())
+	}
 	return jsonOutput, nil
 }
 
