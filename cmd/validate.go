@@ -32,14 +32,6 @@ func FlagErrorFunc(cmd *cobra.Command, err error) error {
 }
 
 func init() {
-	validate.Flags().String("raw-output-plan", "", "Terminal output from terraform plan command")
-	validate.Flags().String("output-path-plan", "", "Filepath for terminal output from terraform plan command")
-	validate.Flags().String("json-path-plan", "", "Filepath to terraform plan JSON file")
-	validate.Flags().String("json-output-plan", "", "JSON output from terraform plan command")
-
-	validate.Flags().String("terraform-api-key", "", "Terraform API Key")
-	validate.Flags().String("terraform-workspace", "", "Terraform workspace for associated plan")
-
 	// persistent flags are flags that are shared between all sub commands
 	validate.PersistentFlags().String("api-key", "", "Digraph API Key")
 

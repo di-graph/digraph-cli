@@ -10,29 +10,39 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"time"
 
+	"github.com/di-graph/digraph/internal/error_handling"
+	"github.com/di-graph/digraph/internal/kubernetes"
+	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 )
 
 type KubernetesConfigValidatorInput struct {
-	KubernetesManifest        string `json:"kubernetes_manifest"`
-	Repository                string `json:"repository"`
-	TriggeringActionEventName string `json:"event_name"`
-	IssueNumber               int    `json:"issue_number"`
-	CommitSHA                 string `json:"commit_sha"`
-	Ref                       string `json:"ref"`
-	InvocationMode            string `json:"invocation_mode"`
+	KubernetesManifest        kubernetes.ParsedKubernetesPlan `json:"kubernetes_manifest"`
+	Repository                string                          `json:"repository"`
+	TriggeringActionEventName string                          `json:"event_name"`
+	IssueNumber               int                             `json:"issue_number"`
+	CommitSHA                 string                          `json:"commit_sha"`
+	Ref                       string                          `json:"ref"`
+	InvocationMode            string                          `json:"invocation_mode"`
+	GroupBy                   string                          `json:"group_by"`
+	OutputFormat              string                          `json:"output_format"`
+	TraceId                   string                          `json:"trace_id"`
 }
 
 const k8sValidationURL = "https://app.getdigraph.com/api/validate/kubernetes"
 
-func invokeDigraphKubernetesValidateAPI(kubernetesManifest, digraphAPIKey, mode, repository, ref, commitSHA string, issueNumber int) (string, error) {
+func invokeDigraphKubernetesValidateAPI(kubernetesManifest kubernetes.ParsedKubernetesPlan, digraphAPIKey, mode, repository, ref, commitSHA, groupBy, outputFormat, traceId string, issueNumber int) (string, error) {
 	requestBody := KubernetesConfigValidatorInput{
 		KubernetesManifest: kubernetesManifest,
 		Repository:         repository,
 		Ref:                ref,
 		InvocationMode:     mode,
+		GroupBy:            groupBy,
+		OutputFormat:       outputFormat,
+		TraceId:            traceId,
 	}
 
 	if mode == "ci/cd" {
@@ -81,64 +91,73 @@ func invokeDigraphKubernetesValidateAPI(kubernetesManifest, digraphAPIKey, mode,
 	body, _ := io.ReadAll(res.Body)
 
 	if res.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("client: error with http request: status code %d with body %s", res.StatusCode, body)
+		return "", &error_handling.RequestError{StatusCode: res.StatusCode, Err: fmt.Errorf("Error with API %s", body)}
 	}
 
 	return string(body), nil
 }
 
+func kubernetesRunCommand(cmd *cobra.Command) error {
+	kubernetesManifest, _ := cmd.Flags().GetString("kubernetes-manifest")
+
+	if len(kubernetesManifest) == 0 {
+		return fmt.Errorf("must include kubernetes-manifest yaml")
+	}
+
+	digraphAPIKey, _ := cmd.Flags().GetString("api-key")
+	repository, _ := cmd.Flags().GetString("repository")
+	ref, _ := cmd.Flags().GetString("ref")
+
+	issueNumber, _ := cmd.Flags().GetInt("issue-number")
+	commitSHA, _ := cmd.Flags().GetString("commit-sha")
+
+	groupBy, _ := cmd.Flags().GetString("group-by")
+	outputFormat, _ := cmd.Flags().GetString("output-format")
+
+	traceId, _ := cmd.Flags().GetString("traceId")
+
+	if len(digraphAPIKey) == 0 {
+		err := godotenv.Load(".env")
+
+		if err != nil {
+			return fmt.Errorf("must specify api-key as argument or set it within a .env file")
+		}
+
+		digraphAPIKey = os.Getenv("api-key")
+	}
+
+	parsedJSON, err := kubernetes.ParseKubernetesYAMLToJSON(kubernetesManifest)
+	if err != nil {
+		return fmt.Errorf("error parsing kubernetes manifest: %s", err)
+	}
+
+	mode := "cli"
+	if len(commitSHA) > 0 || issueNumber > 0 {
+		mode = "ci/cd"
+	}
+
+	output, err := invokeDigraphKubernetesValidateAPI(parsedJSON, digraphAPIKey, mode, repository, ref, commitSHA, groupBy, outputFormat, traceId, issueNumber)
+	if err != nil {
+		return err
+	}
+
+	if mode == "cli" || outputFormat == "json" {
+		fmt.Fprintf(OutputWriter, "%s\n", output)
+	}
+	return nil
+}
+
 func validateKubernetes() *cobra.Command {
-	cmd := &cobra.Command{
+	k8sCmd := &cobra.Command{
 		Use:       "kubernetes",
 		Short:     "Validate kubernetes infra config changes",
 		Long:      ``,
 		ValidArgs: []string{"--", "-"},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			digraphAPIKey, _ := cmd.Flags().GetString("api-key")
-			repository, _ := cmd.Flags().GetString("repository")
-			ref, _ := cmd.Flags().GetString("ref")
-
-			issueNumber, _ := cmd.Flags().GetInt("issue-number")
-			commitSHA, _ := cmd.Flags().GetString("commit-sha")
-
-			kubernetesManifest, _ := cmd.Flags().GetString("kubernetes-manifest")
-
-			mode := "cli"
-			if len(commitSHA) > 0 || issueNumber > 0 {
-				mode = "ci/cd"
-			}
-
-			// if len(digraphAPIKey) == 0 {
-			// 	err := godotenv.Load(".env")
-
-			// 	if err != nil {
-			// 		return fmt.Errorf("must specify api-key as argument or set it within a .env file")
-			// 	}
-
-			// 	digraphAPIKey = os.Getenv("api-key")
-			// }
-
-			output, err := invokeDigraphKubernetesValidateAPI(kubernetesManifest, digraphAPIKey, mode, repository, ref, commitSHA, issueNumber)
-			if err != nil {
-				return fmt.Errorf("error calling API %s", err.Error())
-			}
-
-			if mode == "cli" {
-				fmt.Printf("%s\n", output)
-			}
-			return nil
+			return kubernetesRunCommand(cmd)
 		},
 	}
 
-	cmd.Flags().String("kubernetes-manifest", "", "Kubernetes manifest YAML")
-
-	// cmd.Flags().String("api-key", "", "Digraph API Key")
-
-	// cmd.Flags().String("repository", "", "Github repository")
-
-	// cmd.Flags().String("ref", "", "Branch ref")
-	// cmd.Flags().Int("issue-number", 0, "Pull Request Number")
-	// cmd.Flags().String("commit-sha", "", "Commit SHA")
-
-	return cmd
+	k8sCmd.Flags().String("kubernetes-manifest", "", "Kubernetes manifest YAML")
+	return k8sCmd
 }
