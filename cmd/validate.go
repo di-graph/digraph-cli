@@ -34,15 +34,6 @@ func FlagErrorFunc(cmd *cobra.Command, err error) error {
 func init() {
 	// persistent flags are flags that are shared between all sub commands
 	validate.PersistentFlags().String("api-key", "", "Digraph API Key")
-
-	validate.PersistentFlags().String("raw-output-plan", "", "Terminal output from terraform plan command")
-	validate.PersistentFlags().String("output-path-plan", "", "Filepath for terminal output from terraform plan command")
-	validate.PersistentFlags().String("json-path-plan", "", "Filepath to terraform plan JSON file")
-	validate.PersistentFlags().String("json-output-plan", "", "JSON output from terraform plan command")
-
-	validate.PersistentFlags().String("terraform-api-key", "", "Terraform API Key")
-	validate.PersistentFlags().String("terraform-workspace", "", "Terraform workspace for associated plan")
-
 	validate.PersistentFlags().String("repository", "", "Github repository")
 	validate.PersistentFlags().String("ref", "", "Branch ref")
 	validate.PersistentFlags().Int("issue-number", 0, "Pull Request Number")
@@ -50,6 +41,16 @@ func init() {
 
 	validate.PersistentFlags().String("group-by", "resource", "Group results based on resource or policy")
 	validate.PersistentFlags().String("output-format", "terminal", "Format in which to output results")
+
+	// terraform specific flags
+	validate.Flags().String("raw-output-plan", "", "(Terraform) Terminal output from terraform plan command")
+	validate.Flags().String("output-path-plan", "", "(Terraform) Filepath for terminal output from terraform plan command")
+	validate.Flags().String("json-path-plan", "", "(Terraform) Filepath to terraform plan JSON file")
+	validate.Flags().String("json-output-plan", "", "(Terraform) JSON output from terraform plan command")
+
+	validate.Flags().String("terraform-api-key", "", "(Terraform) Terraform API Key")
+	validate.Flags().String("terraform-workspace", "", "(Terraform) Terraform workspace for associated plan")
+
 	validate.SetFlagErrorFunc(FlagErrorFunc)
 	validate.AddCommand(validateKubernetes())
 	validate.AddCommand(validateTerraform())
