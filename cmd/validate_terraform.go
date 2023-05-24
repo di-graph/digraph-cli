@@ -189,7 +189,7 @@ func terraformRunCommand(cmd *cobra.Command) error {
 
 	parsedPlan, err := terraform.ParseTerraformPlanJSON(jsonFilePath)
 	if err != nil {
-		return &JSONParsingError{Err: err}
+		return fmt.Errorf("error parsing JSON %s", err.Error())
 	}
 
 	mode := "cli"
