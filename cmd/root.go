@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const VERSION = "v0.0.37"
+const VERSION = "v0.0.39"
 
 var OutputWriter io.Writer = os.Stdout
 
