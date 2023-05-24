@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const VERSION = "v0.0.37"
+const VERSION = "v0.0.38"
 
 var OutputWriter io.Writer = os.Stdout
 
@@ -63,6 +63,13 @@ func Execute(rootCmd *cobra.Command) error {
 			// we do not want to error out explicitly on flag parsing issues. Instead fail gracefully
 			fmt.Println(error_handling.FormatError(err.Error()))
 			os.Exit(0)
+		}
+
+		_, ok = err.(*JSONParsingError)
+		if ok {
+			// we want to error out explicitly on JSON parsing issues.
+			fmt.Println(error_handling.FormatError(err.Error()))
+			os.Exit(1)
 		}
 		reqErr, ok := err.(*error_handling.RequestError)
 		if ok {
