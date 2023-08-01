@@ -4,6 +4,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/di-graph/input-sanitizer v0.0.2 h1:olScsxAD8KyOLRQUdsXZjVHBhelS+PzOYgo3LcOsHls=
 github.com/di-graph/input-sanitizer v0.0.2/go.mod h1:CuGeElGm2/ZPpz+t52vp1Sf2EoV0m2CzlR54Mio7Jxk=
+github.com/di-graph/input-sanitizer v0.0.3 h1:qq+etEAQit6IPdEwE7jCFjUFVPC6uJQ3jM0L6hyq7Go=
+github.com/di-graph/input-sanitizer v0.0.3/go.mod h1:7ehQdHl1HtoHch5rDAPQjQB+mGu4VwMjZZOqJCKmSfA=
 github.com/ghodss/yaml v1.0.0 h1:wQHKEahhL6wmXdzwWG11gIVCkOv05bNOh+Rxn0yngAk=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
 github.com/golang/protobuf v1.3.1/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
